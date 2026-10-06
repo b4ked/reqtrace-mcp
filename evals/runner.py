@@ -38,8 +38,9 @@ STRIP_ENV = [
     "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD", "CLAUDE_ADDITIONAL_DIRECTORIES",
     "CLAUDE_PROJECT_DIR", "REQTRACE_ROOT", "VIRTUAL_ENV",
 ]
-INFRA_MARKERS = ("rate limit", "usage limit", "overloaded", "429", "529", "api error",
-                 "authentication", "timed out")
+INFRA_MARKERS = ("rate limit", "usage limit", "session limit", "weekly limit", "hit your",
+                 "resets", "overloaded", "429", "529", "api error", "authentication",
+                 "timed out")
 
 
 def agent_env(home: Path) -> dict[str, str]:
@@ -168,7 +169,11 @@ def run_one(t: Task, condition: str, run_idx: int, out_root: Path, work_root: Pa
     wall = time.monotonic() - t0
     meta = parse_stream(rdir / "stream.jsonl")
     text = (meta.get("result_text", "") + (rdir / "stderr.txt").read_text()[-2000:]).lower()
-    infra = (exit_code != 0 or meta.get("is_error")) and any(k in text for k in INFRA_MARKERS)
+    errored = exit_code != 0 or bool(meta.get("is_error"))
+    # A run that errored without the model producing a single token never really started
+    # (e.g. plan session limit). Never grade that as the agent's failure.
+    no_tokens = not meta.get("output_tokens") and not meta.get("tool_calls")
+    infra = errored and (no_tokens or any(k in text for k in INFRA_MARKERS))
     record: dict[str, Any] = {
         "task": t.id, "type": t.type, "condition": condition, "run": run_idx, "model": model,
         "exit_code": exit_code, "timed_out": timed_out, "wall_s": round(wall, 1),
