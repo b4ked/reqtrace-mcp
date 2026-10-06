@@ -121,3 +121,23 @@ def test_unknown_config_key_rejected(tmp_path: Path) -> None:
     (tmp_path / ".reqtrace.yaml").write_text("test_command: ['rm', '-rf', '/']\n")
     with pytest.raises(ReqtraceError, match="unknown keys"):
         load_config(tmp_path)
+
+
+@pytest.mark.verifies("RT-014")
+def test_target_python_skips_servers_own_venv(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Under uvx, PATH starts with reqtrace's private venv; the repo's tests must not run there."""
+    venv_bin = tmp_path / "venv" / "bin"
+    sys_bin = tmp_path / "sys" / "bin"
+    for d in (venv_bin, sys_bin):
+        d.mkdir(parents=True)
+        exe = d / "python3"
+        exe.write_text("#!/bin/sh\n")
+        exe.chmod(0o755)
+    monkeypatch.setenv("VIRTUAL_ENV", str(venv_bin.parent))
+    monkeypatch.setenv("PATH", f"{venv_bin}:{sys_bin}")
+    assert Config(root=tmp_path).resolve_python() == str(sys_bin / "python3")
+    (tmp_path / ".venv" / "bin").mkdir(parents=True)
+    (tmp_path / ".venv" / "bin" / "python").write_text("")
+    assert Config(root=tmp_path).resolve_python() == str(tmp_path / ".venv/bin/python")

@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .config import Config, ReqtraceError
+from .config import Config, ReqtraceError, clean_path
 from .model import CoverageFigures, RunSummary, TestOutcome
 
 PLUGIN_DIR = Path(__file__).resolve().parent.parent / "_plugin"
@@ -60,6 +60,15 @@ def fingerprint(cfg: Config) -> str:
     return h.hexdigest()[:16]
 
 
+def target_env() -> dict[str, str]:
+    """Environment for the target repo's Python: the server's own venv removed."""
+    env = dict(os.environ)
+    env["PATH"] = os.pathsep.join(clean_path())
+    for key in ("VIRTUAL_ENV", "PYTHONHOME", "UV_INTERNAL__PARENT_INTERPRETER"):
+        env.pop(key, None)
+    return env
+
+
 def _check_env(python: str, cfg: Config) -> None:
     try:
         proc = subprocess.run(
@@ -68,6 +77,7 @@ def _check_env(python: str, cfg: Config) -> None:
             capture_output=True,
             text=True,
             timeout=60,
+            env=target_env(),
         )
     except FileNotFoundError as exc:
         raise ReqtraceError(
@@ -77,7 +87,8 @@ def _check_env(python: str, cfg: Config) -> None:
     if proc.returncode != 0:
         raise ReqtraceError(
             f"{python} cannot import pytest and coverage. Install them in the repo's "
-            f"environment (pip install pytest coverage). Detail: {proc.stderr.strip()[-300:]}"
+            "environment (pip install pytest coverage), or set `python:` in .reqtrace.yaml "
+            f"to the right interpreter. Detail: {proc.stderr.strip()[-300:]}"
         )
 
 
@@ -108,7 +119,7 @@ def run_tests(cfg: Config, node_ids: list[str] | None = None) -> RunSummary:
         *cfg.pytest_args,
         *(node_ids or []),
     ]
-    env = dict(os.environ)
+    env = target_env()
     env["PYTHONPATH"] = os.pathsep.join(filter(None, [str(PLUGIN_DIR), env.get("PYTHONPATH")]))
     env["REQTRACE_RESULTS"] = str(results_file)
     env.pop("COVERAGE_PROCESS_START", None)
