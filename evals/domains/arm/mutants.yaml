@@ -1,0 +1,4 @@
+JNT-001: [["angle_deg > upper:", "angle_deg >= upper:"]]
+JNT-002: [["SOFT_ZONE_DEG = 5.0", "SOFT_ZONE_DEG = 4.0"]]
+JNT-003: [["abs(deg_per_s) <= max_speed", "deg_per_s <= max_speed"]]
+JNT-004: [["(upper - lower) < MIN_SPAN_DEG", "(upper - lower) < 0"]]

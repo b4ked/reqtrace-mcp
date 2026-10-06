@@ -1,0 +1,6 @@
+# One mutant per requirement: a small change that violates only that requirement.
+BMS-001: [["v > CELL_MAX_V", "v >= CELL_MAX_V"]]
+BMS-002: [["v < CELL_MIN_V", "v <= CELL_MIN_V"]]
+BMS-003: [["CHARGE_MIN_C <= temp_c <= CHARGE_MAX_C", "CHARGE_MIN_C <= temp_c < CHARGE_MAX_C"]]
+BMS-004: [["charger_connected and charge_permitted(temp_c)", "charger_connected"]]
+BMS-005: [["elif self.state != \"FAULT\":", "else:"]]

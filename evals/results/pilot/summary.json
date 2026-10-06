@@ -1,0 +1,408 @@
+{
+ "manifest": {
+  "started": "2026-10-06T11:31:13+00:00",
+  "model": "claude-sonnet-5-5",
+  "tasks": [
+   "T01-battery-implement",
+   "T07-thruster-review-boundary"
+  ],
+  "conditions": [
+   "baseline",
+   "reqtrace"
+  ],
+  "runs": 1,
+  "versions": {
+   "claude_code": "2.1.291 (Claude Code)",
+   "mcp_sdk": "2.3.0",
+   "reqtrace": "7463c57",
+   "python": "Python 3.13.16"
+  },
+  "allowed_tools": {
+   "baseline": [
+    "Read",
+    "Edit",
+    "Write",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Agent",
+    "Skill",
+    "Bash(python3 -m pytest)",
+    "Bash(python3 -m pytest *)",
+    "Bash(pytest)",
+    "Bash(pytest *)",
+    "Bash(git diff *)",
+    "Bash(git log *)",
+    "Bash(git show *)",
+    "Bash(git status *)"
+   ],
+   "reqtrace": [
+    "Read",
+    "Edit",
+    "Write",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Agent",
+    "Skill",
+    "Bash(python3 -m pytest)",
+    "Bash(python3 -m pytest *)",
+    "Bash(pytest)",
+    "Bash(pytest *)",
+    "Bash(git diff *)",
+    "Bash(git log *)",
+    "Bash(git show *)",
+    "Bash(git status *)",
+    "mcp__plugin_reqtrace_reqtrace__*"
+   ]
+  }
+ },
+ "runs_total": 4,
+ "runs_ok": 4,
+ "runs_not_ok": [],
+ "metrics": {
+  "task_success": {
+   "label": "Task success (pass@1)",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 2,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 2,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 2
+  },
+  "hidden_pass_rate": {
+   "label": "Hidden acceptance tests passed",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "verification_strength": {
+   "label": "Verification strength (traced mutant kills)",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "detection_any_test": {
+   "label": "Mutants killed by any agent test",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "req_coverage": {
+   "label": "Requirements VERIFIED (reqtrace's own check)",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "link_precision": {
+   "label": "Test\u2192requirement link precision",
+   "higher_is_better": true,
+   "baseline": 0.3684210526315789,
+   "baseline_n_tasks": 1,
+   "reqtrace": 0.7142857142857143,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.3458646616541354,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "impl_precision": {
+   "label": "Code\u2192requirement link precision",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "impl_recall": {
+   "label": "Code\u2192requirement link recall",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "unrequired_code": {
+   "label": "Unrequired code items",
+   "higher_is_better": false,
+   "baseline": 0.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 0.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "tests_failing_on_reference": {
+   "label": "Agent tests that fail on correct code",
+   "higher_is_better": false,
+   "baseline": 0.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 0.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "detection_rate": {
+   "label": "Seeded defects found",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "false_positives": {
+   "label": "False-positive defect findings",
+   "higher_is_better": false,
+   "baseline": 0.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 0.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "ambiguity_flagged": {
+   "label": "Requirement conflict flagged",
+   "higher_is_better": true,
+   "baseline": null,
+   "baseline_n_tasks": 0,
+   "reqtrace": null,
+   "reqtrace_n_tasks": 0
+  },
+  "edited_source": {
+   "label": "Edited files during review (should be 0)",
+   "higher_is_better": false,
+   "baseline": 0.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 0.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "pass_all_k": {
+   "label": "All runs succeed (pass^k)",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "reqtrace": 1.0
+  }
+ },
+ "cost": {
+  "cost_usd_list": {
+   "label": "Cost per run, list-price USD",
+   "baseline": 0.1211506,
+   "baseline_total": 0.2423012,
+   "reqtrace": 0.15730059999999998,
+   "reqtrace_total": 0.31460119999999997
+  },
+  "num_turns": {
+   "label": "Turns",
+   "baseline": 5.5,
+   "baseline_total": 11.0,
+   "reqtrace": 11.0,
+   "reqtrace_total": 22.0
+  },
+  "wall_s": {
+   "label": "Wall-clock seconds",
+   "baseline": 23.7,
+   "baseline_total": 47.4,
+   "reqtrace": 29.85,
+   "reqtrace_total": 59.7
+  },
+  "tool_calls": {
+   "label": "Tool calls",
+   "baseline": 4.5,
+   "baseline_total": 9.0,
+   "reqtrace": 9.5,
+   "reqtrace_total": 19.0
+  },
+  "reqtrace_calls": {
+   "label": "reqtrace tool calls",
+   "baseline": 0.0,
+   "baseline_total": 0.0,
+   "reqtrace": 3.0,
+   "reqtrace_total": 6.0
+  }
+ },
+ "per_task": {
+  "T01-battery-implement": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     null
+    ],
+    "verification_strength": [
+     1.0,
+     null
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     null
+    ],
+    "link_precision": [
+     0.3684210526315789,
+     null
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.1399882,
+     null
+    ],
+    "num_turns": [
+     6.0,
+     null
+    ],
+    "runs": 1
+   },
+   "type": "implement",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     null
+    ],
+    "verification_strength": [
+     1.0,
+     null
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     null
+    ],
+    "link_precision": [
+     0.7142857142857143,
+     null
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.20393639999999996,
+     null
+    ],
+    "num_turns": [
+     17.0,
+     null
+    ],
+    "runs": 1
+   }
+  },
+  "T07-thruster-review-boundary": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     null
+    ],
+    "verification_strength": [
+     null,
+     null
+    ],
+    "hidden_pass_rate": [
+     null,
+     null
+    ],
+    "link_precision": [
+     null,
+     null
+    ],
+    "detection_rate": [
+     1.0,
+     null
+    ],
+    "false_positives": [
+     0.0,
+     null
+    ],
+    "cost_usd_list": [
+     0.102313,
+     null
+    ],
+    "num_turns": [
+     5.0,
+     null
+    ],
+    "runs": 1
+   },
+   "type": "review",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     null
+    ],
+    "verification_strength": [
+     null,
+     null
+    ],
+    "hidden_pass_rate": [
+     null,
+     null
+    ],
+    "link_precision": [
+     null,
+     null
+    ],
+    "detection_rate": [
+     1.0,
+     null
+    ],
+    "false_positives": [
+     0.0,
+     null
+    ],
+    "cost_usd_list": [
+     0.1106648,
+     null
+    ],
+    "num_turns": [
+     5.0,
+     null
+    ],
+    "runs": 1
+   }
+  }
+ },
+ "paired": {}
+}

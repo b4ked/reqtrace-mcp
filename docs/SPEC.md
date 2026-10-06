@@ -277,3 +277,13 @@ LLM-as-judge is only a fallback for matching free-text findings, and only after 
 - Python SDK 2.3.0 (released 2026-10-02) and "What's new in v2" (`MCPServer`, `Client(server)` in-memory testing, `ToolError`, `Resolve`/`Elicit`): pypi.org/project/mcp, py.sdk.modelcontextprotocol.io/whats-new
 - Claude Code docs: MCP (plugin tool naming, `CLAUDE_PROJECT_DIR`, `requiresUserInteraction`, output limits), skills, sub-agents (plugin agent field support), plugin components, headless (`--bare`, stream-json), plugin evals: code.claude.com/docs/en/{mcp, skills, sub-agents, plugins/components, headless, plugin-evals}
 - Local spike: SDK 2.3.0, pytest 9.1.1, coverage 7.16.2, Claude Code 2.1.291
+
+## 11. Changes since this spec was written (build, 2026-10-06)
+
+- Config: `test_command` became `python` (optional) + `pytest_args`, because the runner must
+  wrap pytest in `coverage run` and pick the repo's interpreter, not the server's.
+- 12 tools as listed, plus a `lint_requirements` tool and `gate --verify` in the CLI.
+- MCP server is declared inline in `.claude-plugin/plugin.json` (a root `.mcp.json` would also
+  be read as project config when developing this repo).
+- Eval runner: no `--bare` (runs on the user's Claude plan; see ADR-012). Workspaces outside the
+  repo (ADR-013). Tasks validated by `python -m evals check` (ADR-014).

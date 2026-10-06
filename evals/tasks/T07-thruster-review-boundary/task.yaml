@@ -1,0 +1,16 @@
+type: review
+domain: thruster
+max_turns: 30
+prompt: |
+  Review the code in src/ and its tests against requirements/thruster.yaml. Do not modify any
+  file except FINDINGS.json. Record every problem you find in FINDINGS.json as described in
+  CONTRIBUTING.md; if you find none, write an empty list []. Finish with a short summary.
+defects_applied:
+  - ["abs(cmd) < DEADBAND", "abs(cmd) <= DEADBAND"]
+truth:
+  defects:
+    - id: deadband-boundary
+      req_ids: [THR-002]
+      kinds: [defect, missing_requirement, untested_behaviour]
+      line_match: "abs(cmd) <= DEADBAND"
+      keywords: ["<=", "2.0", "boundary", "inclusive"]

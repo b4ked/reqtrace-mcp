@@ -1,0 +1,6 @@
+type: implement
+domain: thruster
+max_turns: 50
+prompt: |
+  Implement the requirements in requirements/thruster.yaml in src/thruster/limiter.py, with
+  tests. Follow CONTRIBUTING.md. Finish with a short summary.

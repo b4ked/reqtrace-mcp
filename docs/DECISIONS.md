@@ -70,3 +70,32 @@ Lightweight ADRs. Each: context, decision, trade-off, and the one-line interview
 
 **Decision.** The only process the server starts is `test_command` from `.reqtrace.yaml`, as an argv list, no shell, cwd pinned to the root, with a timeout. Paths are resolved and checked against the root. No tool takes a command or arbitrary path outside the root.
 **Trade-off.** Running the repo's own tests still executes repo code; that's inherent and documented. Eval runs go in a container.
+
+## ADR-012 Eval runs on the user's Claude plan, isolated by HOME and environment
+
+**Context.** `claude -p --bare` (the clean option planned in ADR-008) needs an API key; the user
+asked to run on their Claude plan instead, which `--bare` cannot use.
+**Decision.** No `--bare`. Each run gets a fresh, absolute `HOME`, a cleaned environment (the
+hosted workspace's child-session variables removed), its own git workspace, the same prompt,
+model, tools and limits in both arms, and conditions interleaved run by run. The treatment
+differs only by `--plugin-dir`.
+**Trade-off.** Some environment-level plugins (`cc-plugin-*`) and the browser MCP server still
+load in both arms. They are identical across arms and their tools are not in the allow-list,
+so they cost context but cannot act. Recorded in every run's `plugins_loaded`.
+
+## ADR-013 Agent workspaces live outside the repository
+
+**Context.** The pilot's first attempt put workspaces under `evals/results/`, inside the plugin
+directory passed to `--plugin-dir`. Claude Code protects a loaded plugin's directory, so the
+treatment arm was denied every write while the baseline was not: a harness artefact that
+would have shown reqtrace "failing".
+**Decision.** Workspaces and HOMEs go under `~/.cache/reqtrace-eval/` (configurable, refused if
+inside the repo); only graded JSON and summaries live in `evals/results/`. All paths absolute.
+
+## ADR-014 Validate the benchmark before trusting it
+
+**Decision.** `python -m evals check` proves for every task that the reference passes the hidden
+tests, each mutant is caught by the hidden tests of its own requirement, and the starting code
+does not already pass. Grader unit tests score known-good and known-bad workspaces.
+**Why it mattered.** It caught a stale-bytecode bug (two same-size mutants written in the same
+second reused one `.pyc`) and a wrong expectation in a hidden test, before any agent ran.

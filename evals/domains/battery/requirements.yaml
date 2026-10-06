@@ -1,0 +1,38 @@
+# Synthetic requirements for a toy battery management controller. Invented for this benchmark.
+- id: BMS-001
+  title: Cell overvoltage
+  text: The controller shall report a cell fault when any cell voltage exceeds 4.20 V.
+  acceptance:
+    - cells [4.20, 3.70] -> no fault
+    - cells [4.21, 3.70] -> fault
+
+- id: BMS-002
+  title: Cell undervoltage
+  text: The controller shall report a cell fault when any cell voltage is below 3.00 V.
+  acceptance:
+    - cells [3.00] -> no fault
+    - cells [2.99] -> fault
+
+- id: BMS-003
+  title: Charge temperature window
+  text: Charging shall be permitted only when the pack temperature is between 0 °C and 45 °C inclusive.
+  acceptance:
+    - -0.1 °C -> not permitted
+    - 0 °C and 45 °C -> permitted
+    - 45.1 °C -> not permitted
+
+- id: BMS-004
+  title: Charging state
+  text: The controller shall be in CHARGING when the charger is connected, no cell fault is present and charging is permitted, and in IDLE otherwise unless faulted.
+  acceptance:
+    - healthy cells, 25 °C, charger connected -> CHARGING
+    - healthy cells, 25 °C, charger disconnected -> IDLE
+    - healthy cells, 50 °C, charger connected -> IDLE
+
+- id: BMS-005
+  title: Fault latching
+  text: Once in FAULT the controller shall stay in FAULT until reset is called while no cell fault is present.
+  acceptance:
+    - fault, then healthy cells on the next step -> still FAULT
+    - reset while a cell is still out of range -> still FAULT
+    - reset with healthy cells -> IDLE

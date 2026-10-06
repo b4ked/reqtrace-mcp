@@ -1,0 +1,31 @@
+# Synthetic requirements for a toy subsea thruster command limiter. Invented for this benchmark.
+- id: THR-001
+  title: Command saturation
+  text: clamp shall limit the thruster command to the range -100 to +100 percent inclusive.
+  acceptance:
+    - 150 -> 100
+    - -150 -> -100
+    - 42.5 -> 42.5
+
+- id: THR-002
+  title: Deadband
+  text: apply_deadband shall output 0.0 for commands whose magnitude is less than 2.0 percent, and pass all other commands through unchanged.
+  acceptance:
+    - 1.99 -> 0.0
+    - -1.99 -> 0.0
+    - 2.0 -> 2.0
+    - -2.0 -> -2.0
+
+- id: THR-003
+  title: Rate limit
+  text: RateLimiter.apply shall change its output by at most max_step per call, towards the requested command, starting from 0.0.
+  acceptance:
+    - max_step 10, request 50 three times -> 10, 20, 30
+    - max_step 10, from 30, request -50 -> 20
+    - max_step 10, from 0, request 4 -> 4
+
+- id: THR-004
+  title: Invalid command
+  text: clamp shall output 0.0 when the command is not a number (NaN).
+  acceptance:
+    - NaN -> 0.0

@@ -44,3 +44,20 @@ Things that would have gone wrong had I built from memory:
   (invalid altitude short-circuited floor validation), all four requirements VERIFIED.
   21 turns, ~$0.29 list price. Run-to-run variance already visible: run 1 marked
   `altitude_in_metres` as derived, run 2 left it for the human.
+
+## 2026-10-06 — M4 benchmark and pilot
+
+- Ten tasks over four invented domains (battery controller, joint limits, thruster limiter,
+  depth alarm): 4 implement, 2 requirement-change, 3 review (one clean control), 1 conflict.
+- `evals check` failed on the first try for two good reasons: Python reused a cached `.pyc`
+  between two mutants of the same size written in the same second (fix:
+  `PYTHONDONTWRITEBYTECODE=1` in graded runs), and one of my hidden test expectations was
+  wrong (the reference was right).
+- First pilot was invalid. Workspaces were inside the plugin directory, which Claude Code
+  protects, so only the reqtrace arm was denied writes. Also `HOME` was a relative path, so
+  each agent's home directory was created inside its own workspace. Both fixed (ADR-013).
+- Valid pilot (2 tasks × 2 arms × 1 run, Sonnet 5.5): both arms solved both tasks. Differences
+  were in test-to-requirement link precision (0.71 vs 0.37) and cost (11 vs 5.5 turns,
+  $0.16 vs $0.12 list). In the review task the reqtrace arm did not load the skill or call
+  any reqtrace tool. Ceiling risk: these tasks may be too easy for a strong model to show a
+  difference in task success.

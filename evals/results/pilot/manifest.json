@@ -1,0 +1,58 @@
+{
+ "started": "2026-10-06T11:31:13+00:00",
+ "model": "claude-sonnet-5-5",
+ "tasks": [
+  "T01-battery-implement",
+  "T07-thruster-review-boundary"
+ ],
+ "conditions": [
+  "baseline",
+  "reqtrace"
+ ],
+ "runs": 1,
+ "versions": {
+  "claude_code": "2.1.291 (Claude Code)",
+  "mcp_sdk": "2.3.0",
+  "reqtrace": "7463c57",
+  "python": "Python 3.13.16"
+ },
+ "allowed_tools": {
+  "baseline": [
+   "Read",
+   "Edit",
+   "Write",
+   "Glob",
+   "Grep",
+   "TodoWrite",
+   "Agent",
+   "Skill",
+   "Bash(python3 -m pytest)",
+   "Bash(python3 -m pytest *)",
+   "Bash(pytest)",
+   "Bash(pytest *)",
+   "Bash(git diff *)",
+   "Bash(git log *)",
+   "Bash(git show *)",
+   "Bash(git status *)"
+  ],
+  "reqtrace": [
+   "Read",
+   "Edit",
+   "Write",
+   "Glob",
+   "Grep",
+   "TodoWrite",
+   "Agent",
+   "Skill",
+   "Bash(python3 -m pytest)",
+   "Bash(python3 -m pytest *)",
+   "Bash(pytest)",
+   "Bash(pytest *)",
+   "Bash(git diff *)",
+   "Bash(git log *)",
+   "Bash(git show *)",
+   "Bash(git status *)",
+   "mcp__plugin_reqtrace_reqtrace__*"
+  ]
+ }
+}

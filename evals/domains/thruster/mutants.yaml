@@ -1,0 +1,4 @@
+THR-001: [["max(-CMD_LIMIT, min(CMD_LIMIT, cmd))", "max(-2 * CMD_LIMIT, min(CMD_LIMIT, cmd))"]]
+THR-002: [["abs(cmd) < DEADBAND", "abs(cmd) <= DEADBAND"]]
+THR-003: [["delta = max(-self.max_step, min(self.max_step, cmd - self.output))", "delta = min(self.max_step, cmd - self.output)"]]
+THR-004: [["    if math.isnan(cmd):\n        return 0.0\n", ""]]

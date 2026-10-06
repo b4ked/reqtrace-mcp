@@ -1,0 +1,30 @@
+type: change
+domain: arm
+max_turns: 40
+prompt: |
+  The most recent commit changes the requirements in requirements/arm.yaml (see
+  `git show HEAD`). Update the code and tests so the repository meets the current
+  requirements. Follow CONTRIBUTING.md. Finish with a short summary.
+change:
+  requirements:
+    - ["less than 5.0 degrees from either limit", "less than 3.0 degrees from either limit"]
+    - ["    - limits (0, 100), angle 4.99 -> WARN\n    - limits (0, 100), angle 5.0 -> OK\n    - limits (0, 100), angle 95.01 -> WARN",
+       "    - limits (0, 100), angle 2.99 -> WARN\n    - limits (0, 100), angle 3.0 -> OK\n    - limits (0, 100), angle 97.01 -> WARN"]
+    - ["- id: JNT-003", "- id: JNT-005\n  title: Invalid angle\n  text: check_position shall return LIMIT when the angle is not a number (NaN).\n  acceptance:\n    - limits (0, 100), angle NaN -> LIMIT\n\n- id: JNT-003"]
+  reference:
+    - ["SOFT_ZONE_DEG = 5.0", "SOFT_ZONE_DEG = 3.0"]
+    - ["\"\"\"Robot-arm joint limit checker (synthetic benchmark task).\"\"\"\n", "\"\"\"Robot-arm joint limit checker (synthetic benchmark task).\"\"\"\n\nimport math\n"]
+    - ["    if angle_deg < lower or angle_deg > upper:", "    if math.isnan(angle_deg) or angle_deg < lower or angle_deg > upper:"]
+    - ["# implements: JNT-001, JNT-002\n", "# implements: JNT-001, JNT-002, JNT-005\n"]
+  hidden_test:
+    - ["[(4.99, \"WARN\"), (5.0, \"OK\"), (50, \"OK\"),\n                                            (95.0, \"OK\"), (95.01, \"WARN\"), (100, \"WARN\"),",
+       "[(2.99, \"WARN\"), (3.0, \"OK\"), (50, \"OK\"),\n                                            (97.0, \"OK\"), (97.01, \"WARN\"), (100, \"WARN\"),"]
+  hidden_test_append: |
+
+
+    @pytest.mark.verifies("JNT-005")
+    def test_nan_angle():
+        assert check_position(float("nan"), 0, 100) == "LIMIT"
+  mutants:
+    JNT-002: [["SOFT_ZONE_DEG = 3.0", "SOFT_ZONE_DEG = 5.0"]]
+    JNT-005: [["math.isnan(angle_deg) or ", ""]]

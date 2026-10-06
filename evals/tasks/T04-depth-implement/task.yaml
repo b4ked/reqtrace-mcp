@@ -1,0 +1,6 @@
+type: implement
+domain: depth
+max_turns: 50
+prompt: |
+  Implement the requirements in requirements/depth.yaml in src/depth/alarm.py, with tests.
+  Follow CONTRIBUTING.md. Finish with a short summary.

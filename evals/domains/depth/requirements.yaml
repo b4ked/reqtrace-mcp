@@ -1,0 +1,29 @@
+# Synthetic requirements for a toy ROV depth alarm. Invented for this benchmark.
+- id: DEP-001
+  title: Depth from pressure
+  text: depth_m shall convert absolute pressure in kPa to depth in metres of seawater, using density 1025 kg/m3, g = 9.80665 m/s2 and surface pressure 101.325 kPa.
+  acceptance:
+    - 201.843 kPa -> 10.00 m (within 0.01 m)
+    - 603.915 kPa -> 50.00 m (within 0.01 m)
+
+- id: DEP-002
+  title: Surface clamp
+  text: depth_m shall return 0.0 when the pressure is at or below surface pressure.
+  acceptance:
+    - 101.325 kPa -> 0.0
+    - 90.0 kPa -> 0.0
+
+- id: DEP-003
+  title: Alarm debounce
+  text: DepthAlarm shall raise the alarm only after 3 consecutive samples deeper than max_depth_m.
+  acceptance:
+    - max 100, samples 101, 101 -> no alarm; third 101 -> alarm
+    - max 100, samples 101, 101, 99, 101 -> no alarm
+    - a sample equal to max_depth_m is not deeper
+
+- id: DEP-004
+  title: Alarm clear
+  text: Once raised, the alarm shall clear only after 3 consecutive samples at or shallower than max_depth_m.
+  acceptance:
+    - alarm raised, then 99, 99 -> alarm; third 99 -> clear
+    - alarm raised, then 99, 99, 101, 99 -> alarm

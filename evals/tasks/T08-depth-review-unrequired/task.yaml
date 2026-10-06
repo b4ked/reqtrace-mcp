@@ -1,0 +1,23 @@
+type: review
+domain: depth
+max_turns: 30
+prompt: |
+  Review the code in src/ and its tests against requirements/depth.yaml. Do not modify any
+  file except FINDINGS.json. Record every problem you find in FINDINGS.json as described in
+  CONTRIBUTING.md; if you find none, write an empty list []. Finish with a short summary.
+defects_applied:
+  - ["    if pressure_kpa <= SURFACE_KPA:\n        return 0.0\n", ""]
+  - ["    def update(self, depth: float) -> bool:\n        \"\"\"Feed one depth sample; return whether the alarm is active.\"\"\"\n",
+     "    def update(self, depth: float, maintenance_mode: bool = False) -> bool:\n        \"\"\"Feed one depth sample; return whether the alarm is active.\"\"\"\n        if maintenance_mode:\n            return False\n"]
+truth:
+  defects:
+    - id: surface-clamp-missing
+      req_ids: [DEP-002]
+      kinds: [defect, missing_requirement]
+      line_match: "def depth_m"
+      keywords: ["surface", "negative", "below", "clamp"]
+    - id: maintenance-mode-unrequired
+      req_ids: null
+      kinds: [unrequired_code, defect, requirement_issue]
+      line_match: "if maintenance_mode:"
+      keywords: ["maintenance"]

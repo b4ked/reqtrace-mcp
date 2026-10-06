@@ -1,0 +1,6 @@
+type: implement
+domain: arm
+max_turns: 50
+prompt: |
+  Implement the requirements in requirements/arm.yaml in src/arm/limits.py, with tests.
+  Follow CONTRIBUTING.md. Finish with a short summary.

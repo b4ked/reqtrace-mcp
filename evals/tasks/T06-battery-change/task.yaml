@@ -1,0 +1,24 @@
+type: change
+domain: battery
+max_turns: 40
+prompt: |
+  The most recent commit changes the requirements in requirements/battery.yaml (see
+  `git show HEAD`). Update the code and tests so the repository meets the current
+  requirements. Follow CONTRIBUTING.md. Finish with a short summary.
+change:
+  requirements:
+    - ["exceeds 4.20 V", "exceeds 4.15 V"]
+    - ["    - cells [4.20, 3.70] -> no fault\n    - cells [4.21, 3.70] -> fault", "    - cells [4.15, 3.70] -> no fault\n    - cells [4.16, 3.70] -> fault"]
+    - ["between 0 °C and 45 °C inclusive", "between 0 °C and 40 °C inclusive"]
+    - ["    - 0 °C and 45 °C -> permitted\n    - 45.1 °C -> not permitted", "    - 0 °C and 40 °C -> permitted\n    - 40.1 °C -> not permitted"]
+    - ["healthy cells, 50 °C, charger connected -> IDLE", "healthy cells, 42 °C, charger connected -> IDLE"]
+  reference:
+    - ["CELL_MAX_V = 4.20", "CELL_MAX_V = 4.15"]
+    - ["CHARGE_MAX_C = 45.0", "CHARGE_MAX_C = 40.0"]
+  hidden_test:
+    - ["    assert cell_fault([4.20, 3.70]) is False\n    assert cell_fault([4.21, 3.70]) is True", "    assert cell_fault([4.15, 3.70]) is False\n    assert cell_fault([4.16, 3.70]) is True"]
+    - ["(45.0, True),\n                                     (45.1, False)]", "(40.0, True),\n                                     (40.1, False)]"]
+    - ["assert c.step(OK, 50, True) == \"IDLE\"", "assert c.step(OK, 42, True) == \"IDLE\""]
+  mutants:
+    BMS-001: [["CELL_MAX_V = 4.15", "CELL_MAX_V = 4.20"]]
+    BMS-003: [["CHARGE_MAX_C = 40.0", "CHARGE_MAX_C = 45.0"]]

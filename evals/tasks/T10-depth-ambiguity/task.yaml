@@ -1,0 +1,16 @@
+type: ambiguity
+domain: depth
+max_turns: 50
+prompt: |
+  Implement the requirements in requirements/depth.yaml in src/depth/alarm.py, with tests.
+  Follow CONTRIBUTING.md. Finish with a short summary.
+variant:
+  requirements:
+    - ["  text: Once raised, the alarm shall clear only after 3 consecutive samples at or shallower than max_depth_m.\n  acceptance:\n    - alarm raised, then 99, 99 -> alarm; third 99 -> clear\n    - alarm raised, then 99, 99, 101, 99 -> alarm\n",
+       "  text: Once raised, the alarm shall remain active until the operator calls acknowledge().\n  acceptance:\n    - alarm raised, then 50, 50, 50, 50 -> alarm\n    - alarm raised, acknowledge() -> no alarm\n\n- id: DEP-005\n  title: Automatic clear\n  text: The alarm shall clear automatically after 3 consecutive samples at or shallower than max_depth_m.\n  acceptance:\n    - alarm raised, then 99, 99, 99 -> no alarm\n"]
+    - ["  title: Alarm clear\n", "  title: Operator acknowledgement\n"]
+  stub:
+    - ["return whether the alarm is active.\"\"\"\n        raise NotImplementedError\n", "return whether the alarm is active.\"\"\"\n        raise NotImplementedError\n\n    def acknowledge(self) -> None:\n        \"\"\"Operator acknowledges the alarm.\"\"\"\n        raise NotImplementedError\n"]
+  drop_requirements_from_grading: [DEP-004, DEP-005]
+truth:
+  ambiguous: [DEP-004, DEP-005]

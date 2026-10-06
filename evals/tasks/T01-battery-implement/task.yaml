@@ -1,0 +1,6 @@
+type: implement
+domain: battery
+max_turns: 50
+prompt: |
+  Implement the requirements in requirements/battery.yaml in src/battery/bms.py, with tests.
+  Follow CONTRIBUTING.md. Finish with a short summary.

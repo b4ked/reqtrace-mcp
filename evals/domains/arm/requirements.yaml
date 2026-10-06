@@ -1,0 +1,33 @@
+# Synthetic requirements for a toy robot-arm joint limit checker. Invented for this benchmark.
+- id: JNT-001
+  title: Hard limit
+  text: check_position shall return LIMIT when the joint angle is outside the closed interval [lower, upper].
+  acceptance:
+    - limits (0, 100), angle 100.01 -> LIMIT
+    - limits (0, 100), angle -0.01 -> LIMIT
+    - limits (0, 100), angle 100 -> not LIMIT
+
+- id: JNT-002
+  title: Soft limit warning zone
+  text: For an angle inside the limits, check_position shall return WARN when the angle is less than 5.0 degrees from either limit, and OK otherwise.
+  acceptance:
+    - limits (0, 100), angle 4.99 -> WARN
+    - limits (0, 100), angle 5.0 -> OK
+    - limits (0, 100), angle 95.01 -> WARN
+    - limits (0, 100), angle 100 -> WARN
+
+- id: JNT-003
+  title: Speed limit
+  text: check_velocity shall return False when the magnitude of the joint speed exceeds max_speed, and True otherwise.
+  acceptance:
+    - speed 30, max 30 -> True
+    - speed 30.1, max 30 -> False
+    - speed -30.1, max 30 -> False
+
+- id: JNT-004
+  title: Limit validation
+  text: validate_limits and check_position shall raise ValueError when lower is not below upper or the span is less than 10 degrees.
+  acceptance:
+    - limits (0, 10) accepted
+    - limits (0, 9.9) -> ValueError
+    - limits (10, 0) -> ValueError

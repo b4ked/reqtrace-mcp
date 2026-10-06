@@ -1,0 +1,10 @@
+type: review
+domain: battery
+max_turns: 30
+prompt: |
+  Review the code in src/ and its tests against requirements/battery.yaml. Do not modify any
+  file except FINDINGS.json. Record every problem you find in FINDINGS.json as described in
+  CONTRIBUTING.md; if you find none, write an empty list []. Finish with a short summary.
+defects_applied: []
+truth:
+  defects: []
