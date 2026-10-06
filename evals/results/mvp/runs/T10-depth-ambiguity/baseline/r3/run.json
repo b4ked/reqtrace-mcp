@@ -1,0 +1,105 @@
+{
+ "task": "T10-depth-ambiguity",
+ "type": "ambiguity",
+ "condition": "baseline",
+ "run": 3,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 44.0,
+ "base_commit": "75958e94d53d859cf7ea8a03a222cbdf0f9474f2",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T10-depth-ambiguity/baseline/r3/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 8,
+ "duration_s": 42.91,
+ "cost_usd_list": 0.1528032,
+ "input_tokens": 12,
+ "cache_read_tokens": 227056,
+ "cache_write_tokens": 13360,
+ "output_tokens": 5294,
+ "tool_calls": 7,
+ "reqtrace_calls": 0,
+ "tools_main": {
+  "Bash": 4,
+  "Write": 3
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "Bash was denied, so I wrote the files directly. I haven't run the tests.\n\n**What I did**\n- `src/depth/alarm.py`:\n  - `depth_m` covers DEP-001 and DEP-002.\n  - `DepthAlarm` covers DEP-003 and DEP-004.\n  - Each function and class has the `# implements:` marker above it.\n  - The constants are marked `# derived:`.\n- `tests/test_alarm.py`: tests marked with `verifies`, covering the DEP-001 to DEP-004 acceptance criteria, including the boundaries. The boundaries are a sample equal to max, a pressure just above the surface, and a fresh debounce after `acknowledge()`.\n- `FINDINGS.json`: one `requirement_issue` entry for DEP-005.\n\n**Requirement conflict**\nDEP-004 and DEP-005 contradict each other. DEP-004 says the alarm stays on until `acknowledge()`, and 50, 50, 50, 50 after a raise must still give an alarm. DEP-005 says the alarm clears by itself after 3 samples at or below max, and 99, 99, 99 after a raise must give no alarm. I implemented DEP-004 because a latched alarm is the safer behaviour. DEP-005 is not implemented and has no test. Someone needs to decide which requirement stands.\n\n**Tests**\n`python3 -m pytest` still needs to be run. If you allow Bash I can run it.",
+ "plugins_loaded": [
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T10-depth-ambiguity",
+  "type": "ambiguity",
+  "hidden_total": 7,
+  "hidden_passed": 7,
+  "hidden_pass_rate": 1.0,
+  "task_success": true,
+  "hidden_per_req": {
+   "DEP-001": true,
+   "DEP-002": true,
+   "DEP-003": true
+  },
+  "agent_tests": 12,
+  "portable_tests": 9,
+  "tests_failing_on_reference": 0,
+  "tests_failing_on_reference_ids": [],
+  "verification_strength": 1.0,
+  "detection_any_test": 1.0,
+  "link_precision": 0.6666666666666666,
+  "per_req": {
+   "DEP-001": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "DEP-002": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "DEP-003": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   }
+  },
+  "impl_precision": 1.0,
+  "impl_recall": 1.0,
+  "req_coverage": 1.0,
+  "status": {
+   "DEP-001": "VERIFIED",
+   "DEP-002": "VERIFIED",
+   "DEP-003": "VERIFIED",
+   "DEP-004": "VERIFIED",
+   "DEP-005": "NOT_IMPLEMENTED"
+  },
+  "weakly_verified": 0,
+  "unrequired_code": 0,
+  "unrequired_items": [],
+  "ambiguity_flagged": true,
+  "requirement_findings": 1,
+  "flags": [
+   {
+    "req_id": "DEP-005",
+    "kind": "requirement_issue",
+    "file": "src/depth/alarm.py",
+    "line": 0,
+    "description": "DEP-005 (auto-clear after 3 samples <= max; acceptance: raised then 99,99,99 -> no alarm) directly contradicts DEP-004 (alarm stays active until acknowledge(); acceptance: raised then 50,50,50,50 -> alarm). Both cannot hold. Implemented DEP-004 (latching, fail-safe); DEP-005 is not implemented and has no test. Needs a decision, e.g. auto-clear only after acknowledge, or drop one requirement."
+   }
+  ]
+ },
+ "status": "ok",
+ "regraded": true
+}

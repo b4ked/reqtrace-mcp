@@ -1,0 +1,100 @@
+{
+ "task": "T07-thruster-review-boundary",
+ "type": "review",
+ "condition": "reqtrace",
+ "run": 2,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 28.0,
+ "base_commit": "fa7cf88845da569f95eddb2d4b95e48c52494338",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T07-thruster-review-boundary/reqtrace/r2/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 5,
+ "duration_s": 24.737,
+ "cost_usd_list": 0.1109954,
+ "input_tokens": 10,
+ "cache_read_tokens": 191937,
+ "cache_write_tokens": 11970,
+ "output_tokens": 2368,
+ "tool_calls": 4,
+ "reqtrace_calls": 0,
+ "tools_main": {
+  "Bash": 3,
+  "Write": 1
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "I wrote five findings to `FINDINGS.json` and changed no other file. I couldn't run the tests or validate the JSON, because Bash was denied partway through. The findings come from reading the code and tests.\n\n- **Defect, THR-002:** `apply_deadband` in `src/thruster/limiter.py:20` uses `<=`, so it zeroes \u00b12.0. The requirement says only magnitudes below 2.0 are zeroed, so \u00b12.0 should pass through. It should use `<`.\n- **Weak test, THR-002:** `test_deadband` only checks 1.0 and 5.0. It never tries 1.99, -1.99, 2.0 or -2.0, so it passes against the faulty code.\n- **Untested behaviour, THR-001:** `test_clamp` doesn't check the inclusive limits at exactly \u00b1100 or values just either side of them.\n- **Untested behaviour, THR-003:** `test_rate_limit` skips three acceptance criteria:\n  - the third call, which should give 30;\n  - the step back from 30 towards -50, which should give 20;\n  - the request below `max_step` (from 0, request 4 gives 4).\n- **Requirement issue, THR-004:** it only covers NaN. Infinity is unspecified, and so is NaN passed to `apply_deadband` or `RateLimiter.apply`. A NaN into `apply` would leave the output NaN for good.\n\nI found no unrequired code and no problems with the `# implements:` annotations.",
+ "plugins_loaded": [
+  "reqtrace",
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "plugin:reqtrace:reqtrace",
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T07-thruster-review-boundary",
+  "type": "review",
+  "defects_total": 1,
+  "defects_found": 1,
+  "detection_rate": 1.0,
+  "defects_matched": {
+   "deadband-boundary": true
+  },
+  "false_positives": 0,
+  "other_findings": 4,
+  "findings_total": 5,
+  "edited_files": [],
+  "edited_source": false,
+  "task_success": true,
+  "findings": [
+   {
+    "req_id": "THR-002",
+    "kind": "defect",
+    "file": "src/thruster/limiter.py",
+    "line": 20,
+    "description": "apply_deadband uses abs(cmd) <= DEADBAND, so 2.0 and -2.0 are zeroed. Requirement says only magnitude < 2.0 is zeroed; 2.0 -> 2.0 and -2.0 -> -2.0 must pass through. Should be '<'."
+   },
+   {
+    "req_id": "THR-002",
+    "kind": "weak_test",
+    "file": "tests/test_limiter.py",
+    "line": 48,
+    "description": "test_deadband only checks 1.0 and 5.0, far from the boundary. It misses 1.99, -1.99, 2.0 and -2.0, so it does not catch the '<=' boundary defect and passes against the faulty code."
+   },
+   {
+    "req_id": "THR-001",
+    "kind": "untested_behaviour",
+    "file": "tests/test_limiter.py",
+    "line": 41,
+    "description": "test_clamp does not check the boundaries exactly (100, -100) or values just inside or outside them. The 'inclusive' range is untested at the boundary."
+   },
+   {
+    "req_id": "THR-003",
+    "kind": "untested_behaviour",
+    "file": "tests/test_limiter.py",
+    "line": 54,
+    "description": "test_rate_limit omits the acceptance criteria for a third call (30), a step back towards a negative command from 30 (-50 -> 20), and a request smaller than max_step (from 0, request 4 -> 4)."
+   },
+   {
+    "req_id": "THR-004",
+    "kind": "requirement_issue",
+    "file": "requirements/thruster.yaml",
+    "line": 31,
+    "description": "THR-004 covers only NaN. The behaviour for infinity is not stated (clamp currently gives +/-100). RateLimiter.apply and apply_deadband with NaN are also unspecified: NaN passes through apply_deadband, and apply() would make the output NaN permanently."
+   }
+  ],
+  "requirement_lint": 0
+ },
+ "status": "ok",
+ "regraded": true
+}

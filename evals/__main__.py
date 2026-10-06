@@ -31,6 +31,8 @@ def main(argv: list[str] | None = None) -> int:
     r.add_argument("-j", "--jobs", type=int, default=1)
     r.add_argument("--timeout", type=int, default=1500)
     r.add_argument("--force", action="store_true", help="Re-run even completed runs")
+    rg = sub.add_parser("regrade", help="Re-grade existing workspaces with the current graders")
+    rg.add_argument("results")
     rp = sub.add_parser("report", help="Aggregate results into RESULTS.md and charts")
     rp.add_argument("results")
     args = p.parse_args(argv)
@@ -42,6 +44,13 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{tid:34} {probs or 'OK'}")
             bad += bool(probs)
         return 1 if bad else 0
+
+    if args.cmd == "regrade":
+        from .runner import regrade_all
+
+        n = regrade_all(Path(args.results))
+        print(f"Re-graded {n} runs")
+        return 0
 
     if args.cmd == "report":
         from .report import write_report

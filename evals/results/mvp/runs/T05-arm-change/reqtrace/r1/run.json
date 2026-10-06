@@ -1,0 +1,115 @@
+{
+ "task": "T05-arm-change",
+ "type": "change",
+ "condition": "reqtrace",
+ "run": 1,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 34.1,
+ "base_commit": "eae3e145febca296a161e769226ca382cd93e7f8",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T05-arm-change/reqtrace/r1/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 13,
+ "duration_s": 31.034,
+ "cost_usd_list": 0.1463842,
+ "input_tokens": 14,
+ "cache_read_tokens": 288666,
+ "cache_write_tokens": 15428,
+ "output_tokens": 2590,
+ "tool_calls": 11,
+ "reqtrace_calls": 2,
+ "tools_main": {
+  "Bash": 3,
+  "Skill": 1,
+  "Edit": 4,
+  "ToolSearch": 1,
+  "mcp__plugin_reqtrace_reqtrace__run_verification": 1,
+  "mcp__plugin_reqtrace_reqtrace__find_gaps": 1
+ },
+ "tools_subagents": {},
+ "skills_invoked": [
+  "reqtrace:traceable-development"
+ ],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "The code and tests now match the changed requirements. `run_verification` passes all 11 tests and marks JNT-001 to JNT-005 as VERIFIED. `find_gaps` reports clean.\n\n- **JNT-002 (soft zone):** I changed `SOFT_ZONE_DEG` from 5.0 to 3.0 in `src/arm/limits.py`. I rewrote the soft-zone test around the new boundaries: 2.99 \u2192 WARN, 3.0 \u2192 OK, 97.0 \u2192 OK, 97.01 \u2192 WARN, and 100 \u2192 WARN. I also added cases for 0 and 50.\n- **JNT-005 (NaN angle):** `check_position` now returns `\"LIMIT\"` for NaN. The limits are validated first, so invalid limits still raise `ValueError`. I added a `test_nan_angle` test marked `verifies(\"JNT-005\")`, and the function's annotation now reads `# implements: JNT-001, JNT-002, JNT-005`.\n\nMy first attempt to run the edits as a Python script through Bash was denied, so I made them with the Edit tool instead. I didn't run `evidence_report` or the independent-verifier agent, and no sign-off has been recorded.",
+ "plugins_loaded": [
+  "reqtrace",
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "plugin:reqtrace:reqtrace",
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T05-arm-change",
+  "type": "change",
+  "hidden_total": 17,
+  "hidden_passed": 17,
+  "hidden_pass_rate": 1.0,
+  "task_success": true,
+  "hidden_per_req": {
+   "JNT-001": true,
+   "JNT-002": true,
+   "JNT-003": true,
+   "JNT-004": true,
+   "JNT-005": true
+  },
+  "agent_tests": 11,
+  "portable_tests": 11,
+  "tests_failing_on_reference": 0,
+  "tests_failing_on_reference_ids": [],
+  "verification_strength": 1.0,
+  "detection_any_test": 1.0,
+  "link_precision": 0.5454545454545454,
+  "per_req": {
+   "JNT-001": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-002": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-003": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-004": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-005": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   }
+  },
+  "impl_precision": 1.0,
+  "impl_recall": 1.0,
+  "req_coverage": 1.0,
+  "status": {
+   "JNT-001": "VERIFIED",
+   "JNT-002": "VERIFIED",
+   "JNT-005": "VERIFIED",
+   "JNT-003": "VERIFIED",
+   "JNT-004": "VERIFIED"
+  },
+  "weakly_verified": 0,
+  "unrequired_code": 0,
+  "unrequired_items": [],
+  "requirement_findings": 0
+ },
+ "status": "ok",
+ "regraded": true
+}

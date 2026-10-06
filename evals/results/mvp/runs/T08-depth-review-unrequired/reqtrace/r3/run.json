@@ -1,0 +1,115 @@
+{
+ "task": "T08-depth-review-unrequired",
+ "type": "review",
+ "condition": "reqtrace",
+ "run": 3,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 25.5,
+ "base_commit": "240628b6b02de7d649e1bfd6b4f0172391bb3ffc",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T08-depth-review-unrequired/reqtrace/r3/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 5,
+ "duration_s": 22.244,
+ "cost_usd_list": 0.12215340000000002,
+ "input_tokens": 10,
+ "cache_read_tokens": 192372,
+ "cache_write_tokens": 12873,
+ "output_tokens": 3113,
+ "tool_calls": 4,
+ "reqtrace_calls": 0,
+ "tools_main": {
+  "Bash": 3,
+  "Write": 1
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "I wrote seven findings to `FINDINGS.json` and changed no other file. I didn't run the tests. Bash was denied partway through, so I also didn't check that the JSON parses.\n\n- **DEP-002, defect:** `depth_m` in `src/depth/alarm.py` has no surface clamp. 90 kPa returns about -1.13 m instead of 0.0.\n- **Unrequired code, tagged DEP-003:** `DepthAlarm.update` takes a `maintenance_mode` parameter that no requirement asks for, and it isn't marked `# derived`. When it's set, `update` returns False without touching the counters, even if the alarm is active. That contradicts DEP-003 and DEP-004.\n- **Untested behaviour (four findings):**\n  - DEP-002: nothing tests a pressure below the surface, so the missing clamp goes unnoticed.\n  - DEP-001: the 50 m criterion (603.915 kPa) isn't tested.\n  - DEP-003: nothing tests the interrupted sequence (101, 101, 99, 101), or a sample equal to the maximum not counting as deeper.\n  - DEP-004: nothing tests the interrupted clear sequence (99, 99, 101, 99), or a sample equal to the maximum counting as at-or-shallower.\n- **Weak test, DEP-001:** the conversion test checks a single point (10 m), so a wrong slope or offset that happens to match there would still pass.\n\nThe line numbers for the test findings point at the decorator-or-function lines in `tests/test_alarm.py`. I derived them from concatenated output, so they could be slightly off.",
+ "plugins_loaded": [
+  "reqtrace",
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "plugin:reqtrace:reqtrace",
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T08-depth-review-unrequired",
+  "type": "review",
+  "defects_total": 2,
+  "defects_found": 2,
+  "detection_rate": 1.0,
+  "defects_matched": {
+   "surface-clamp-missing": true,
+   "maintenance-mode-unrequired": true
+  },
+  "false_positives": 0,
+  "other_findings": 5,
+  "findings_total": 7,
+  "edited_files": [],
+  "edited_source": false,
+  "task_success": true,
+  "findings": [
+   {
+    "req_id": "DEP-002",
+    "kind": "defect",
+    "file": "src/depth/alarm.py",
+    "line": 11,
+    "description": "depth_m has no surface clamp: pressures at or below 101.325 kPa return 0.0 or negative depth (90.0 kPa -> about -1.13 m) instead of 0.0."
+   },
+   {
+    "req_id": "DEP-003",
+    "kind": "unrequired_code",
+    "file": "src/depth/alarm.py",
+    "line": 22,
+    "description": "update() has a maintenance_mode parameter that no requirement asks for and is not marked '# derived'. It returns False without updating counters, even when the alarm is active, which contradicts DEP-003/DEP-004."
+   },
+   {
+    "req_id": "DEP-002",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 11,
+    "description": "No test for pressure below surface (90.0 kPa -> 0.0). The existing test checks only the exact-boundary value, so the missing clamp is not caught."
+   },
+   {
+    "req_id": "DEP-001",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 6,
+    "description": "The 603.915 kPa -> 50.00 m acceptance criterion is not tested."
+   },
+   {
+    "req_id": "DEP-003",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 16,
+    "description": "Not tested: a non-consecutive sequence (101,101,99,101 -> no alarm) and a sample equal to max_depth_m not counting as deeper."
+   },
+   {
+    "req_id": "DEP-004",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 22,
+    "description": "Not tested: interrupted clear sequence (99,99,101,99 -> alarm stays active) and a sample equal to max_depth_m counting as at-or-shallower."
+   },
+   {
+    "req_id": "DEP-001",
+    "kind": "weak_test",
+    "file": "tests/test_alarm.py",
+    "line": 6,
+    "description": "Single-point check with tolerance. One input cannot distinguish a correct conversion from a wrong slope or offset that happens to match at 10 m."
+   }
+  ],
+  "requirement_lint": 0
+ },
+ "status": "ok",
+ "regraded": true
+}

@@ -191,3 +191,22 @@ def run_one(t: Task, condition: str, run_idx: int, out_root: Path, work_root: Pa
     done.write_text(json.dumps(record, indent=1, default=str))
     shutil.rmtree(home, ignore_errors=True)  # holds a copy of auth/config; don't keep it
     return record
+
+
+def regrade_all(out_root: Path) -> int:
+    """Re-grade every 'ok' run from its kept workspace (agents are not re-run)."""
+    from .tasks import load_task
+
+    n = 0
+    for f in sorted(out_root.resolve().glob("runs/*/*/r*/run.json")):
+        rec = json.loads(f.read_text())
+        if rec.get("status") != "ok":
+            continue
+        ws = Path(rec["workspace"])
+        if not ws.exists():
+            raise SystemExit(f"workspace missing for {f}: {ws}")
+        rec["grade"] = grade_run(ws, load_task(rec["task"]), rec["base_commit"])
+        rec["regraded"] = True
+        f.write_text(json.dumps(rec, indent=1, default=str))
+        n += 1
+    return n

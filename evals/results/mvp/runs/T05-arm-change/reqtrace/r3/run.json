@@ -1,0 +1,111 @@
+{
+ "task": "T05-arm-change",
+ "type": "change",
+ "condition": "reqtrace",
+ "run": 3,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 25.8,
+ "base_commit": "eebd700527ee991b92746b5afc0cad90f27efb9c",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T05-arm-change/reqtrace/r3/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 11,
+ "duration_s": 22.594,
+ "cost_usd_list": 0.1447022,
+ "input_tokens": 14,
+ "cache_read_tokens": 281586,
+ "cache_write_tokens": 14364,
+ "output_tokens": 2989,
+ "tool_calls": 10,
+ "reqtrace_calls": 1,
+ "tools_main": {
+  "Bash": 3,
+  "Edit": 5,
+  "ToolSearch": 1,
+  "mcp__plugin_reqtrace_reqtrace__run_verification": 1
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "The code and tests now meet the updated requirements. All 10 tests pass, and `run_verification` reports JNT-001 to JNT-005 as VERIFIED. That is a test result, not a human sign-off.\n\n- **JNT-002:** In `src/arm/limits.py`, I changed `SOFT_ZONE_DEG` from 5.0 to 3.0. `test_soft_zone` now covers 0, 2.99, 3.0, 97.0, 97.01 and 100.\n- **JNT-005 (new):** `check_position` now returns `LIMIT` for a NaN angle. I annotated it `# implements: JNT-005` and added `test_nan_angle`. The limits are validated before the NaN check, so invalid limits still raise `ValueError`.\n- **JNT-004:** I added `check_position` cases to the existing test, since the requirement covers it as well as `validate_limits`.\n\nBash was denied in this session, so I made the edits with the edit tools and ran the tests through `run_verification`. I didn't commit anything.",
+ "plugins_loaded": [
+  "reqtrace",
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "plugin:reqtrace:reqtrace",
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T05-arm-change",
+  "type": "change",
+  "hidden_total": 17,
+  "hidden_passed": 17,
+  "hidden_pass_rate": 1.0,
+  "task_success": true,
+  "hidden_per_req": {
+   "JNT-001": true,
+   "JNT-002": true,
+   "JNT-003": true,
+   "JNT-004": true,
+   "JNT-005": true
+  },
+  "agent_tests": 10,
+  "portable_tests": 10,
+  "tests_failing_on_reference": 0,
+  "tests_failing_on_reference_ids": [],
+  "verification_strength": 1.0,
+  "detection_any_test": 1.0,
+  "link_precision": 0.6,
+  "per_req": {
+   "JNT-001": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-002": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-003": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-004": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-005": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   }
+  },
+  "impl_precision": 1.0,
+  "impl_recall": 1.0,
+  "req_coverage": 1.0,
+  "status": {
+   "JNT-001": "VERIFIED",
+   "JNT-002": "VERIFIED",
+   "JNT-005": "VERIFIED",
+   "JNT-003": "VERIFIED",
+   "JNT-004": "VERIFIED"
+  },
+  "weakly_verified": 0,
+  "unrequired_code": 0,
+  "unrequired_items": [],
+  "requirement_findings": 0
+ },
+ "status": "ok",
+ "regraded": true
+}

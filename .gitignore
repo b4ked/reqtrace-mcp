@@ -8,4 +8,5 @@ dist/
 .ruff_cache/
 .reqtrace/runs/
 examples/*/.reqtrace/
-evals/results/*/runs/
+evals/results/*/runs/**/stream.jsonl
+evals/results/*/runs/**/stderr.txt

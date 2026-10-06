@@ -1,0 +1,112 @@
+{
+ "task": "T10-depth-ambiguity",
+ "type": "ambiguity",
+ "condition": "baseline",
+ "run": 1,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 40.9,
+ "base_commit": "181dc8a3b9f8df0f309082ce4d7288bdf7cf10dc",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T10-depth-ambiguity/baseline/r1/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 8,
+ "duration_s": 39.685,
+ "cost_usd_list": 0.1464062,
+ "input_tokens": 12,
+ "cache_read_tokens": 226821,
+ "cache_write_tokens": 12785,
+ "output_tokens": 4889,
+ "tool_calls": 7,
+ "reqtrace_calls": 0,
+ "tools_main": {
+  "Bash": 4,
+  "Write": 3
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "I implemented DEP-001 to DEP-004 in `src/depth/alarm.py`, but I haven't run the tests. Bash was denied in this session (\"don't ask\" mode), so I wrote the files with the file tools and `python3 -m pytest` is still to do.\n\n**DEP-004 and DEP-005 conflict.** DEP-004 says the alarm stays on until `acknowledge()`, and its example is \"raised, then 50, 50, 50, 50 \u2192 alarm\". DEP-005 says it clears itself after 3 samples at or below the maximum, and its example is \"raised, then 99, 99, 99 \u2192 no alarm\". Both can't hold.\n\nI chose the latching behaviour from DEP-004, since it's the safer default for an alarm. That means **DEP-005 is not implemented and has no test**. I recorded the conflict in `FINDINGS.json` as a `requirement_issue` on DEP-004 and a `missing_requirement` on DEP-005. You'll need to decide which one stands, or whether auto-clear should only apply after an acknowledge.\n\n**What's in place:**\n- **`src/depth/alarm.py`:**\n  - `depth_m` converts pressure to depth (DEP-001) and returns 0.0 at or below surface pressure (DEP-002).\n  - `DepthAlarm` raises the alarm after 3 consecutive samples deeper than the maximum, and a sample equal to the maximum doesn't count (DEP-003). It latches once raised and clears on `acknowledge()` (DEP-004).\n  - `# implements:` and `# derived:` markers follow CONTRIBUTING.md.\n- **`tests/test_alarm.py`:** 7 tests marked with `@pytest.mark.verifies`, covering each acceptance example for DEP-001 to DEP-004. That includes the surface-pressure boundary, the equal-to-maximum case, and the counter reset after a shallow sample.\n- **`FINDINGS.json`:** the two entries above.",
+ "plugins_loaded": [
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T10-depth-ambiguity",
+  "type": "ambiguity",
+  "hidden_total": 7,
+  "hidden_passed": 7,
+  "hidden_pass_rate": 1.0,
+  "task_success": true,
+  "hidden_per_req": {
+   "DEP-001": true,
+   "DEP-002": true,
+   "DEP-003": true
+  },
+  "agent_tests": 7,
+  "portable_tests": 5,
+  "tests_failing_on_reference": 0,
+  "tests_failing_on_reference_ids": [],
+  "verification_strength": 1.0,
+  "detection_any_test": 1.0,
+  "link_precision": 0.8,
+  "per_req": {
+   "DEP-001": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "DEP-002": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "DEP-003": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   }
+  },
+  "impl_precision": 1.0,
+  "impl_recall": 1.0,
+  "req_coverage": 1.0,
+  "status": {
+   "DEP-001": "VERIFIED",
+   "DEP-002": "VERIFIED",
+   "DEP-003": "VERIFIED",
+   "DEP-004": "VERIFIED",
+   "DEP-005": "NOT_IMPLEMENTED"
+  },
+  "weakly_verified": 0,
+  "unrequired_code": 0,
+  "unrequired_items": [],
+  "ambiguity_flagged": true,
+  "requirement_findings": 2,
+  "flags": [
+   {
+    "req_id": "DEP-004",
+    "kind": "requirement_issue",
+    "file": "requirements/depth.yaml",
+    "line": 25,
+    "description": "DEP-004 (alarm stays active until acknowledge(); 'raised, then 50,50,50,50 -> alarm') conflicts with DEP-005 (auto-clear after 3 samples at/below max; 'raised, then 99,99,99 -> no alarm'). Both cannot hold. Implemented the latching behaviour of DEP-004 (safer); DEP-005 is NOT implemented and has no test. Needs a decision, e.g. auto-clear only after acknowledge, or drop one."
+   },
+   {
+    "req_id": "DEP-005",
+    "kind": "missing_requirement",
+    "file": "src/depth/alarm.py",
+    "line": 25,
+    "description": "DEP-005 automatic clear deliberately not implemented because it contradicts DEP-004; see the DEP-004 finding."
+   }
+  ]
+ },
+ "status": "ok",
+ "regraded": true
+}

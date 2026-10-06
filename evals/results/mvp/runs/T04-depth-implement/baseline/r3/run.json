@@ -1,0 +1,100 @@
+{
+ "task": "T04-depth-implement",
+ "type": "implement",
+ "condition": "baseline",
+ "run": 3,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 37.5,
+ "base_commit": "aceff21c90243a5e91ba8f5a68add0507e10755f",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T04-depth-implement/baseline/r3/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 6,
+ "duration_s": 36.252,
+ "cost_usd_list": 0.1360556,
+ "input_tokens": 10,
+ "cache_read_tokens": 187473,
+ "cache_write_tokens": 12507,
+ "output_tokens": 4752,
+ "tool_calls": 5,
+ "reqtrace_calls": 0,
+ "tools_main": {
+  "Bash": 3,
+  "Write": 2
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "I implemented DEP-001 to DEP-004 in `src/depth/alarm.py` and added tests, but I haven't run them. Bash was denied in this session (don't-ask mode), so please run `python3 -m pytest` yourself.\n\n- **Depth:** `depth_m` returns 0.0 at or below 101.325 kPa. Above that it computes `(p \u2212 101.325) \u00d7 1000 / (1025 \u00d7 9.80665)`. By hand, 201.843 kPa gives 9.9993 m, within 0.01 m of the 10.00 m criterion.\n- **Alarm:** `DepthAlarm.update` counts consecutive samples that disagree with the current state, and flips the state on the third. A sample equal to `max_depth_m` counts as not deeper, and any agreeing sample resets the count.\n- **Traceability:** each function and class has a `# implements:` line directly above it. The constants and the 3-sample debounce count are marked `# derived:` with a reason, as CONTRIBUTING.md asks. Public names and signatures are unchanged.\n- **Tests:** `tests/test_alarm.py` has 11 test functions, each marked `@pytest.mark.verifies`. They cover every acceptance criterion and both sides of the boundaries:\n  - **Surface:** at and just above 101.325 kPa.\n  - **Max depth:** a sample equal to `max_depth_m`.\n  - **Streaks:** interrupted streaks.\n  - **Re-raise:** raising again after the alarm clears.\n\nI didn't add anything to `FINDINGS.json`, because I found no problems with the requirements.",
+ "plugins_loaded": [
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T04-depth-implement",
+  "type": "implement",
+  "hidden_total": 8,
+  "hidden_passed": 8,
+  "hidden_pass_rate": 1.0,
+  "task_success": true,
+  "hidden_per_req": {
+   "DEP-001": true,
+   "DEP-002": true,
+   "DEP-003": true,
+   "DEP-004": true
+  },
+  "agent_tests": 14,
+  "portable_tests": 14,
+  "tests_failing_on_reference": 0,
+  "tests_failing_on_reference_ids": [],
+  "verification_strength": 1.0,
+  "detection_any_test": 1.0,
+  "link_precision": 0.7333333333333333,
+  "per_req": {
+   "DEP-001": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "DEP-002": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "DEP-003": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "DEP-004": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   }
+  },
+  "impl_precision": 1.0,
+  "impl_recall": 1.0,
+  "req_coverage": 1.0,
+  "status": {
+   "DEP-001": "VERIFIED",
+   "DEP-002": "VERIFIED",
+   "DEP-003": "VERIFIED",
+   "DEP-004": "VERIFIED"
+  },
+  "weakly_verified": 0,
+  "unrequired_code": 0,
+  "unrequired_items": [],
+  "requirement_findings": 0
+ },
+ "status": "ok",
+ "regraded": true
+}

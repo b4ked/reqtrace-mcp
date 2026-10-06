@@ -1,0 +1,102 @@
+{
+ "task": "T02-arm-implement",
+ "type": "implement",
+ "condition": "baseline",
+ "run": 1,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 23.5,
+ "base_commit": "0b8ac8cb1b4ea1444ac0177dc642afaf99a54276",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T02-arm-implement/baseline/r1/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 6,
+ "duration_s": 22.262,
+ "cost_usd_list": 0.1204706,
+ "input_tokens": 10,
+ "cache_read_tokens": 186793,
+ "cache_write_tokens": 11436,
+ "output_tokens": 3635,
+ "tool_calls": 5,
+ "reqtrace_calls": 0,
+ "tools_main": {
+  "Bash": 3,
+  "Write": 2
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "I implemented all four requirements and wrote tests for them, but I haven't run the tests. The shell was denied in this session, so `python3 -m pytest` hasn't been run.\n\n**`src/arm/limits.py`**\n- `validate_limits` raises `ValueError` unless `lower < upper` and the span is at least 10 degrees (JNT-004).\n- `check_position` validates the limits first.\n  - It returns `LIMIT` for angles outside `[lower, upper]`.\n  - It returns `WARN` when the angle is less than 5.0 degrees from either limit, and `OK` otherwise (JNT-001, 002, 004).\n- `check_velocity` returns `abs(speed) <= max_speed` (JNT-003).\n- Each function has an `# implements:` comment above it, as CONTRIBUTING.md asks.\n- I added two constants, `WARN_ZONE_DEG` and `MIN_SPAN_DEG`, marked `# derived`.\n\n**`tests/test_limits.py`**\n- Every test carries `@pytest.mark.verifies(...)`.\n- The tests cover every acceptance criterion, with both sides of each boundary: 4.99 and 5.0, 95.0 and 95.01, 0 and 100, \u00b130 and \u00b130.1, span 10 and 9.9, and inverted or equal limits.\n\nI found no requirement problems, so I did not create a `FINDINGS.json`.\n\nPlease run `python3 -m pytest` to confirm the tests pass.",
+ "plugins_loaded": [
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T02-arm-implement",
+  "type": "implement",
+  "hidden_total": 16,
+  "hidden_passed": 16,
+  "hidden_pass_rate": 1.0,
+  "task_success": true,
+  "hidden_per_req": {
+   "JNT-001": true,
+   "JNT-002": true,
+   "JNT-003": true,
+   "JNT-004": true
+  },
+  "agent_tests": 20,
+  "portable_tests": 19,
+  "tests_failing_on_reference": 1,
+  "tests_failing_on_reference_ids": [
+   "tests/test_limits.py::test_min_span_accepted"
+  ],
+  "verification_strength": 1.0,
+  "detection_any_test": 1.0,
+  "link_precision": 0.2631578947368421,
+  "per_req": {
+   "JNT-001": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-002": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-003": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   },
+   "JNT-004": {
+    "traced_detection": true,
+    "any_detection": true,
+    "linked_tests": true
+   }
+  },
+  "impl_precision": 0.8,
+  "impl_recall": 1.0,
+  "req_coverage": 0.75,
+  "status": {
+   "JNT-001": "VERIFIED",
+   "JNT-002": "VERIFIED",
+   "JNT-003": "VERIFIED",
+   "JNT-004": "FAILING"
+  },
+  "weakly_verified": 0,
+  "unrequired_code": 0,
+  "unrequired_items": [],
+  "requirement_findings": 0
+ },
+ "status": "ok",
+ "regraded": true
+}

@@ -1,0 +1,106 @@
+{
+ "task": "T08-depth-review-unrequired",
+ "type": "review",
+ "condition": "baseline",
+ "run": 2,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 18.3,
+ "base_commit": "440f2f3c1192f6621c1cd7dedaf01c3d286a6625",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T08-depth-review-unrequired/baseline/r2/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 5,
+ "duration_s": 17.086,
+ "cost_usd_list": 0.1034186,
+ "input_tokens": 10,
+ "cache_read_tokens": 187638,
+ "cache_write_tokens": 10786,
+ "output_tokens": 2169,
+ "tool_calls": 4,
+ "reqtrace_calls": 0,
+ "tools_main": {
+  "Bash": 3,
+  "Write": 1
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "I wrote six findings to `FINDINGS.json`. I didn't touch any other file. The four existing tests pass, but they miss most of the acceptance criteria. The Bash call I made to validate the JSON was denied, so the file is written but not checked for validity.\n\n- **Defect (DEP-002):** `depth_m` in `src/depth/alarm.py` has no surface clamp. A pressure of 90 kPa returns a negative depth instead of 0.0.\n- **Unrequired code:** `DepthAlarm.update` takes a `maintenance_mode` argument that no requirement asks for. It returns False even when the alarm is active and skips sample counting, and it isn't marked `# derived`.\n- **Untested behaviour:**\n  - DEP-001: the 603.915 kPa \u2192 50 m case.\n  - DEP-002: the 90 kPa case, which is why the missing clamp goes unnoticed.\n  - DEP-003: the interrupted sequence (101, 101, 99, 101) and the \"equal to max is not deeper\" boundary.\n  - DEP-004: the interrupted clear (99, 99, 101, 99).",
+ "plugins_loaded": [
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T08-depth-review-unrequired",
+  "type": "review",
+  "defects_total": 2,
+  "defects_found": 2,
+  "detection_rate": 1.0,
+  "defects_matched": {
+   "surface-clamp-missing": true,
+   "maintenance-mode-unrequired": true
+  },
+  "false_positives": 0,
+  "other_findings": 4,
+  "findings_total": 6,
+  "edited_files": [],
+  "edited_source": false,
+  "task_success": true,
+  "findings": [
+   {
+    "req_id": "DEP-002",
+    "kind": "defect",
+    "file": "src/depth/alarm.py",
+    "line": 11,
+    "description": "depth_m does not clamp: pressures below surface pressure (e.g. 90.0 kPa) return a negative depth instead of 0.0."
+   },
+   {
+    "req_id": "DEP-002",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 47,
+    "description": "Only 101.325 kPa is tested; the 90.0 kPa (below surface) acceptance criterion is not covered, which is why the missing clamp goes unnoticed."
+   },
+   {
+    "req_id": "DEP-001",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 42,
+    "description": "The 603.915 kPa -> 50.00 m acceptance criterion is not tested."
+   },
+   {
+    "req_id": "DEP-003",
+    "kind": "unrequired_code",
+    "file": "src/depth/alarm.py",
+    "line": 22,
+    "description": "The maintenance_mode parameter and its early return (lines 22-25) are not asked for by any requirement; it also suppresses the alarm output (returns False even when active) and skips counting. Not marked '# derived'."
+   },
+   {
+    "req_id": "DEP-003",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 52,
+    "description": "Missing tests for the interruption case (101,101,99,101 -> no alarm) and the boundary where a sample equal to max_depth_m is not deeper."
+   },
+   {
+    "req_id": "DEP-004",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 58,
+    "description": "Missing test for the clear-interruption case (raised, 99,99,101,99 -> alarm stays active); only the straight-through clear is tested."
+   }
+  ],
+  "requirement_lint": 0
+ },
+ "status": "ok",
+ "regraded": true
+}

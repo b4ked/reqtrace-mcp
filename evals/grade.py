@@ -86,7 +86,10 @@ def grade_strength(ws: Path, t: Task, tmp: Path) -> dict[str, Any]:
                 "link_precision": None, "tests_failing_on_reference": 0, "per_req": {}}
     base = lambda n: PARAM_RE.sub("", n)  # noqa: E731
     portable = {n for n, v in ref.items() if v["outcome"] == "passed"}
-    failing_ref = sorted({base(n) for n, v in ref.items() if v["outcome"] in ("failed", "error")})
+    # Tests of requirements excluded from grading (e.g. the conflicting pair in an ambiguity
+    # task) have no correct answer, so failing on the reference says nothing about them.
+    failing_ref = sorted({base(n) for n, v in ref.items() if v["outcome"] in ("failed", "error")
+                          and not set(v["verifies"]) & set(t.drop_reqs)})
     per_req: dict[str, dict[str, bool]] = {}
     kills: dict[str, set[str]] = {}
     for rid, src in sorted(t.mutant_sources.items()):

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import statistics
 from collections import defaultdict
 from pathlib import Path
@@ -35,6 +36,12 @@ METRICS: list[tuple[str, str, set[str], bool, bool]] = [
      False, False),
     ("tests_failing_on_reference", "Agent tests that fail on correct code",
      {"implement", "change", "ambiguity"}, False, False),
+    ("shipped_wrong_test", "Shipped a test failing on correct code",
+     {"implement", "change", "ambiguity"}, False, True),
+    ("ran_tests", "Agent ran its own tests", {"implement", "change", "review", "ambiguity"},
+     True, True),
+    ("used_reqtrace", "Agent called any reqtrace tool", {"implement", "change", "review",
+                                                          "ambiguity"}, True, True),
     ("detection_rate", "Seeded defects found", {"review"}, True, True),
     ("false_positives", "False-positive defect findings", {"review"}, False, False),
     ("ambiguity_flagged", "Requirement conflict flagged", {"ambiguity"}, True, True),
@@ -57,8 +64,48 @@ def _num(v: Any) -> float | None:
     return None
 
 
+PYTEST_CMD = re.compile(r"^\s*(cd \S+ && )?(python3? -m )?pytest\b")
+
+
+def ran_own_tests(stream: Path) -> bool:
+    """Did the agent successfully execute its tests (pytest via Bash, or run_verification)?"""
+    if not stream.exists():
+        return False
+    calls: set[str] = set()
+    for line in stream.read_text(errors="replace").splitlines():
+        try:
+            m = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        msg = m.get("message")
+        content = msg.get("content") if isinstance(msg, dict) else None
+        if m.get("type") == "assistant" and isinstance(content, list):
+            for b in content:
+                if b.get("type") == "tool_use" and (
+                        (b["name"] == "Bash" and PYTEST_CMD.match(b["input"].get("command", "")))
+                        or b["name"].endswith("__run_verification")):
+                    calls.add(b["id"])
+        elif m.get("type") == "user" and isinstance(content, list):
+            for b in content:
+                if b.get("type") == "tool_result" and b.get("tool_use_id") in calls:
+                    raw = b.get("content")
+                    txt = raw if isinstance(raw, str) else json.dumps(raw)
+                    if "denied" not in txt[:300]:
+                        return True
+    return False
+
+
 def load_runs(results: Path) -> list[dict[str, Any]]:
-    return [json.loads(p.read_text()) for p in sorted(results.glob("runs/*/*/r*/run.json"))]
+    runs = []
+    for p in sorted(results.glob("runs/*/*/r*/run.json")):
+        r = json.loads(p.read_text())
+        g = r.setdefault("grade", {})
+        g["ran_tests"] = ran_own_tests(p.with_name("stream.jsonl"))
+        if "tests_failing_on_reference" in g:
+            g["shipped_wrong_test"] = g["tests_failing_on_reference"] > 0
+        g["used_reqtrace"] = (r.get("reqtrace_calls") or 0) > 0
+        runs.append(r)
+    return runs
 
 
 def per_task(runs: list[dict[str, Any]]) -> dict[tuple[str, str], dict[str, Any]]:
@@ -166,8 +213,8 @@ def chart(summary: dict[str, Any], path: Path) -> None:
     import matplotlib.pyplot as plt
 
     conds = summary["manifest"]["conditions"]
-    keys = ["task_success", "hidden_pass_rate", "verification_strength", "req_coverage",
-            "link_precision", "detection_rate"]
+    keys = ["task_success", "hidden_pass_rate", "verification_strength", "detection_rate",
+            "link_precision", "ran_tests", "shipped_wrong_test"]
     rows = [(summary["metrics"][k]["label"], [summary["metrics"][k].get(c) for c in conds])
             for k in keys if any(summary["metrics"][k].get(c) is not None for c in conds)]
     fig, ax = plt.subplots(figsize=(8, 0.55 * len(rows) + 1.6), dpi=160)

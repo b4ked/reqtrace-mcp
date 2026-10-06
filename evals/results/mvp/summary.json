@@ -1,0 +1,1085 @@
+{
+ "manifest": {
+  "started": "2026-10-06T12:11:15+00:00",
+  "model": "claude-sonnet-5-5",
+  "tasks": [
+   "T01-battery-implement",
+   "T02-arm-implement",
+   "T03-thruster-implement",
+   "T04-depth-implement",
+   "T05-arm-change",
+   "T06-battery-change",
+   "T07-thruster-review-boundary",
+   "T08-depth-review-unrequired",
+   "T09-battery-review-clean",
+   "T10-depth-ambiguity"
+  ],
+  "conditions": [
+   "baseline",
+   "reqtrace"
+  ],
+  "runs": 3,
+  "versions": {
+   "claude_code": "2.1.291 (Claude Code)",
+   "mcp_sdk": "2.3.0",
+   "reqtrace": "90d0d6e",
+   "python": "Python 3.13.16"
+  },
+  "allowed_tools": {
+   "baseline": [
+    "Read",
+    "Edit",
+    "Write",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Agent",
+    "Skill",
+    "Bash(python3 -m pytest)",
+    "Bash(python3 -m pytest *)",
+    "Bash(pytest)",
+    "Bash(pytest *)",
+    "Bash(git diff *)",
+    "Bash(git log *)",
+    "Bash(git show *)",
+    "Bash(git status *)"
+   ],
+   "reqtrace": [
+    "Read",
+    "Edit",
+    "Write",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "Agent",
+    "Skill",
+    "Bash(python3 -m pytest)",
+    "Bash(python3 -m pytest *)",
+    "Bash(pytest)",
+    "Bash(pytest *)",
+    "Bash(git diff *)",
+    "Bash(git log *)",
+    "Bash(git show *)",
+    "Bash(git status *)",
+    "mcp__plugin_reqtrace_reqtrace__*"
+   ]
+  },
+  "resumed": {
+   "at": "2026-10-06T13:37:34+00:00",
+   "versions": {
+    "claude_code": "2.1.291 (Claude Code)",
+    "mcp_sdk": "2.3.0",
+    "reqtrace": "e02440f",
+    "python": "Python 3.13.16"
+   },
+   "note": "One run (T10 reqtrace r3) hit the plan session limit and was re-run after the limit reset. All runs re-graded with the final graders."
+  }
+ },
+ "runs_total": 60,
+ "runs_ok": 60,
+ "runs_not_ok": [],
+ "metrics": {
+  "task_success": {
+   "label": "Task success (pass@1)",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 10,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 10,
+   "diff": 0.0,
+   "diff_ci95": [
+    0.0,
+    0.0
+   ],
+   "n_paired_tasks": 10
+  },
+  "hidden_pass_rate": {
+   "label": "Hidden acceptance tests passed",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 7,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 7,
+   "diff": 0.0,
+   "diff_ci95": [
+    0.0,
+    0.0
+   ],
+   "n_paired_tasks": 7
+  },
+  "verification_strength": {
+   "label": "Verification strength (traced mutant kills)",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 7,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 7,
+   "diff": 0.0,
+   "diff_ci95": [
+    0.0,
+    0.0
+   ],
+   "n_paired_tasks": 7
+  },
+  "detection_any_test": {
+   "label": "Mutants killed by any agent test",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 7,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 7,
+   "diff": 0.0,
+   "diff_ci95": [
+    0.0,
+    0.0
+   ],
+   "n_paired_tasks": 7
+  },
+  "req_coverage": {
+   "label": "Requirements VERIFIED (reqtrace's own check)",
+   "higher_is_better": true,
+   "baseline": 0.9761904761904762,
+   "baseline_n_tasks": 7,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 7,
+   "diff": 0.023809523809523805,
+   "diff_ci95": [
+    0.0,
+    0.07142857142857141
+   ],
+   "n_paired_tasks": 7
+  },
+  "link_precision": {
+   "label": "Test\u2192requirement link precision",
+   "higher_is_better": true,
+   "baseline": 0.519619836238589,
+   "baseline_n_tasks": 7,
+   "reqtrace": 0.5171537429432166,
+   "reqtrace_n_tasks": 7,
+   "diff": -0.002466093295372388,
+   "diff_ci95": [
+    -0.02365898512515054,
+    0.02560761146563889
+   ],
+   "n_paired_tasks": 7
+  },
+  "impl_precision": {
+   "label": "Code\u2192requirement link precision",
+   "higher_is_better": true,
+   "baseline": 0.9714285714285714,
+   "baseline_n_tasks": 7,
+   "reqtrace": 0.9714285714285714,
+   "reqtrace_n_tasks": 7,
+   "diff": 0.0,
+   "diff_ci95": [
+    0.0,
+    0.0
+   ],
+   "n_paired_tasks": 7
+  },
+  "impl_recall": {
+   "label": "Code\u2192requirement link recall",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 7,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 7,
+   "diff": 0.0,
+   "diff_ci95": [
+    0.0,
+    0.0
+   ],
+   "n_paired_tasks": 7
+  },
+  "unrequired_code": {
+   "label": "Unrequired code items",
+   "higher_is_better": false,
+   "baseline": 0.0,
+   "baseline_n_tasks": 7,
+   "reqtrace": 0.0,
+   "reqtrace_n_tasks": 7,
+   "diff": 0.0,
+   "diff_ci95": [
+    0.0,
+    0.0
+   ],
+   "n_paired_tasks": 7
+  },
+  "tests_failing_on_reference": {
+   "label": "Agent tests that fail on correct code",
+   "higher_is_better": false,
+   "baseline": 0.14285714285714285,
+   "baseline_n_tasks": 7,
+   "reqtrace": 0.0,
+   "reqtrace_n_tasks": 7,
+   "diff": -0.14285714285714285,
+   "diff_ci95": [
+    -0.42857142857142855,
+    0.0
+   ],
+   "n_paired_tasks": 7
+  },
+  "shipped_wrong_test": {
+   "label": "Shipped a test failing on correct code",
+   "higher_is_better": false,
+   "baseline": 0.14285714285714285,
+   "baseline_n_tasks": 7,
+   "reqtrace": 0.0,
+   "reqtrace_n_tasks": 7,
+   "diff": -0.14285714285714285,
+   "diff_ci95": [
+    -0.42857142857142855,
+    0.0
+   ],
+   "n_paired_tasks": 7
+  },
+  "ran_tests": {
+   "label": "Agent ran its own tests",
+   "higher_is_better": true,
+   "baseline": 0.0,
+   "baseline_n_tasks": 10,
+   "reqtrace": 0.5333333333333333,
+   "reqtrace_n_tasks": 10,
+   "diff": 0.5333333333333333,
+   "diff_ci95": [
+    0.26666666666666666,
+    0.8
+   ],
+   "n_paired_tasks": 10
+  },
+  "used_reqtrace": {
+   "label": "Agent called any reqtrace tool",
+   "higher_is_better": true,
+   "baseline": 0.0,
+   "baseline_n_tasks": 10,
+   "reqtrace": 0.5333333333333333,
+   "reqtrace_n_tasks": 10,
+   "diff": 0.5333333333333333,
+   "diff_ci95": [
+    0.26666666666666666,
+    0.8
+   ],
+   "n_paired_tasks": 10
+  },
+  "detection_rate": {
+   "label": "Seeded defects found",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 2,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 2,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 2
+  },
+  "false_positives": {
+   "label": "False-positive defect findings",
+   "higher_is_better": false,
+   "baseline": 0.0,
+   "baseline_n_tasks": 3,
+   "reqtrace": 0.0,
+   "reqtrace_n_tasks": 3,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 3
+  },
+  "ambiguity_flagged": {
+   "label": "Requirement conflict flagged",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "baseline_n_tasks": 1,
+   "reqtrace": 1.0,
+   "reqtrace_n_tasks": 1,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 1
+  },
+  "edited_source": {
+   "label": "Edited files during review (should be 0)",
+   "higher_is_better": false,
+   "baseline": 0.0,
+   "baseline_n_tasks": 3,
+   "reqtrace": 0.0,
+   "reqtrace_n_tasks": 3,
+   "diff": 0.0,
+   "diff_ci95": null,
+   "n_paired_tasks": 3
+  },
+  "pass_all_k": {
+   "label": "All runs succeed (pass^k)",
+   "higher_is_better": true,
+   "baseline": 1.0,
+   "reqtrace": 1.0
+  }
+ },
+ "cost": {
+  "cost_usd_list": {
+   "label": "Cost per run, list-price USD",
+   "baseline": 0.11890453333333334,
+   "baseline_total": 3.567136,
+   "reqtrace": 0.14661781333333332,
+   "reqtrace_total": 4.3985344
+  },
+  "num_turns": {
+   "label": "Turns",
+   "baseline": 6.633333333333334,
+   "baseline_total": 199.0,
+   "reqtrace": 10.233333333333333,
+   "reqtrace_total": 307.0
+  },
+  "wall_s": {
+   "label": "Wall-clock seconds",
+   "baseline": 24.983333333333334,
+   "baseline_total": 749.5,
+   "reqtrace": 27.709999999999997,
+   "reqtrace_total": 831.3
+  },
+  "tool_calls": {
+   "label": "Tool calls",
+   "baseline": 5.633333333333334,
+   "baseline_total": 169.0,
+   "reqtrace": 8.766666666666667,
+   "reqtrace_total": 263.0
+  },
+  "reqtrace_calls": {
+   "label": "reqtrace tool calls",
+   "baseline": 0.0,
+   "baseline_total": 0.0,
+   "reqtrace": 1.6666666666666667,
+   "reqtrace_total": 50.0
+  }
+ },
+ "per_task": {
+  "T01-battery-implement": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.3004201680672269,
+     0.04396733095894191
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.140862,
+     0.006068573422697199
+    ],
+    "num_turns": [
+     6.666666666666667,
+     0.9428090415820634
+    ],
+    "runs": 3
+   },
+   "type": "implement",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.37343358395989973,
+     0.09737414626597701
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.1718050666666667,
+     0.011802800337019838
+    ],
+    "num_turns": [
+     13.333333333333334,
+     1.699673171197595
+    ],
+    "runs": 3
+   }
+  },
+  "T02-arm-implement": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.2587719298245614,
+     0.006202691063039884
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.1295212,
+     0.010644800316899636
+    ],
+    "num_turns": [
+     6.333333333333333,
+     0.4714045207910317
+    ],
+    "runs": 3
+   },
+   "type": "implement",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.2542424242424242,
+     0.013693483063872726
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.1773486,
+     0.02487742553614957
+    ],
+    "num_turns": [
+     15.666666666666666,
+     2.494438257849294
+    ],
+    "runs": 3
+   }
+  },
+  "T03-thruster-implement": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.3515594541910331,
+     0.029863076966346914
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.1284146,
+     0.010900386343000251
+    ],
+    "num_turns": [
+     7.0,
+     0.816496580927726
+    ],
+    "runs": 3
+   },
+   "type": "implement",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.35185185185185186,
+     0.026189140043946218
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.1657542,
+     0.005586045764223563
+    ],
+    "num_turns": [
+     13.333333333333334,
+     0.4714045207910317
+    ],
+    "runs": 3
+   }
+  },
+  "T04-depth-implement": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.7682539682539682,
+     0.024692617755720726
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.1350022,
+     0.0062469199002388376
+    ],
+    "num_turns": [
+     6.333333333333333,
+     0.4714045207910317
+    ],
+    "runs": 3
+   },
+   "type": "implement",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.7281746031746031,
+     0.10427526463072152
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.176504,
+     0.008082413743430845
+    ],
+    "num_turns": [
+     13.333333333333334,
+     0.9428090415820634
+    ],
+    "runs": 3
+   }
+  },
+  "T05-arm-change": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.6222222222222222,
+     0.03142696805273544
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.112149,
+     0.0073710795572968744
+    ],
+    "num_turns": [
+     8.333333333333334,
+     1.247219128924647
+    ],
+    "runs": 3
+   },
+   "type": "change",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.604040404040404,
+     0.04956704705610221
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.13632933333333333,
+     0.013048455792502373
+    ],
+    "num_turns": [
+     11.0,
+     1.632993161855452
+    ],
+    "runs": 3
+   }
+  },
+  "T06-battery-change": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.625,
+     0.0
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.1024866,
+     0.000757577736385297
+    ],
+    "num_turns": [
+     9.0,
+     0.0
+    ],
+    "runs": 3
+   },
+   "type": "change",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.625,
+     0.0
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.11030053333333334,
+     0.000689071207415373
+    ],
+    "num_turns": [
+     9.0,
+     0.0
+    ],
+    "runs": 3
+   }
+  },
+  "T07-thruster-review-boundary": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     null,
+     null
+    ],
+    "hidden_pass_rate": [
+     null,
+     null
+    ],
+    "link_precision": [
+     null,
+     null
+    ],
+    "detection_rate": [
+     1.0,
+     0.0
+    ],
+    "false_positives": [
+     0.0,
+     0.0
+    ],
+    "cost_usd_list": [
+     0.1016346,
+     0.001923718336971407
+    ],
+    "num_turns": [
+     5.0,
+     0.0
+    ],
+    "runs": 3
+   },
+   "type": "review",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     null,
+     null
+    ],
+    "hidden_pass_rate": [
+     null,
+     null
+    ],
+    "link_precision": [
+     null,
+     null
+    ],
+    "detection_rate": [
+     1.0,
+     0.0
+    ],
+    "false_positives": [
+     0.0,
+     0.0
+    ],
+    "cost_usd_list": [
+     0.1089218,
+     0.0015849356916501902
+    ],
+    "num_turns": [
+     5.0,
+     0.0
+    ],
+    "runs": 3
+   }
+  },
+  "T08-depth-review-unrequired": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     null,
+     null
+    ],
+    "hidden_pass_rate": [
+     null,
+     null
+    ],
+    "link_precision": [
+     null,
+     null
+    ],
+    "detection_rate": [
+     1.0,
+     0.0
+    ],
+    "false_positives": [
+     0.0,
+     0.0
+    ],
+    "cost_usd_list": [
+     0.1050182,
+     0.0012682499438202268
+    ],
+    "num_turns": [
+     5.0,
+     0.0
+    ],
+    "runs": 3
+   },
+   "type": "review",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     null,
+     null
+    ],
+    "hidden_pass_rate": [
+     null,
+     null
+    ],
+    "link_precision": [
+     null,
+     null
+    ],
+    "detection_rate": [
+     1.0,
+     0.0
+    ],
+    "false_positives": [
+     0.0,
+     0.0
+    ],
+    "cost_usd_list": [
+     0.11559073333333335,
+     0.004735003919275641
+    ],
+    "num_turns": [
+     5.0,
+     0.0
+    ],
+    "runs": 3
+   }
+  },
+  "T09-battery-review-clean": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     null,
+     null
+    ],
+    "hidden_pass_rate": [
+     null,
+     null
+    ],
+    "link_precision": [
+     null,
+     null
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     0.0,
+     0.0
+    ],
+    "cost_usd_list": [
+     0.08648593333333333,
+     0.0005615382761268864
+    ],
+    "num_turns": [
+     5.0,
+     0.0
+    ],
+    "runs": 3
+   },
+   "type": "review",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     null,
+     null
+    ],
+    "hidden_pass_rate": [
+     null,
+     null
+    ],
+    "link_precision": [
+     null,
+     null
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     0.0,
+     0.0
+    ],
+    "cost_usd_list": [
+     0.09541319999999999,
+     0.002432792814852923
+    ],
+    "num_turns": [
+     5.0,
+     0.0
+    ],
+    "runs": 3
+   }
+  },
+  "T10-depth-ambiguity": {
+   "baseline": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.7111111111111111,
+     0.06285393610547092
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.147471,
+     0.00399069161257378
+    ],
+    "num_turns": [
+     7.666666666666667,
+     0.4714045207910317
+    ],
+    "runs": 3
+   },
+   "type": "ambiguity",
+   "reqtrace": {
+    "task_success": [
+     1.0,
+     0.0
+    ],
+    "verification_strength": [
+     1.0,
+     0.0
+    ],
+    "hidden_pass_rate": [
+     1.0,
+     0.0
+    ],
+    "link_precision": [
+     0.6833333333333332,
+     0.08249579113843057
+    ],
+    "detection_rate": [
+     null,
+     null
+    ],
+    "false_positives": [
+     null,
+     null
+    ],
+    "cost_usd_list": [
+     0.20821066666666668,
+     0.05641344687272905
+    ],
+    "num_turns": [
+     11.666666666666666,
+     3.2998316455372216
+    ],
+    "runs": 3
+   }
+  }
+ },
+ "paired": {}
+}

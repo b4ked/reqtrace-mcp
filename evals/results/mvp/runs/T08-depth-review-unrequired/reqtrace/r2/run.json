@@ -1,0 +1,108 @@
+{
+ "task": "T08-depth-review-unrequired",
+ "type": "review",
+ "condition": "reqtrace",
+ "run": 2,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 21.2,
+ "base_commit": "37493d421912c09ebb03230df1c3e1c956030278",
+ "workspace": "/root/.cache/reqtrace-eval/mvp/T08-depth-review-unrequired/reqtrace/r2/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 5,
+ "duration_s": 18.035,
+ "cost_usd_list": 0.1134622,
+ "input_tokens": 10,
+ "cache_read_tokens": 191851,
+ "cache_write_tokens": 12350,
+ "output_tokens": 2464,
+ "tool_calls": 4,
+ "reqtrace_calls": 0,
+ "tools_main": {
+  "Bash": 3,
+  "Write": 1
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "I wrote six findings to `FINDINGS.json` and changed no other file. I didn't run the tests, and I couldn't check the JSON with a parser because Bash was denied.\n\n- **Defect (DEP-002):** `depth_m` in `src/depth/alarm.py` has no surface clamp. A pressure at or below 101.325 kPa, such as 90.0 kPa, returns a negative depth instead of 0.0.\n- **Unrequired code (DEP-003):** `DepthAlarm.update` has a `maintenance_mode` parameter that no requirement asks for. It returns False even when the alarm is active and skips debounce counting, which contradicts DEP-003 and DEP-004. It is also not marked `# derived`.\n- **Untested behaviour:**\n  - DEP-001: the 603.915 kPa \u2192 50 m criterion has no test.\n  - DEP-003: no test covers the interrupted sequence 101, 101, 99, 101, or a sample equal to `max_depth_m`.\n  - DEP-004: no test covers the interrupted sequence 99, 99, 101, 99 or the at-max boundary.\n- **Weak test (DEP-002):** `tests/test_alarm.py` only checks exactly 101.325 kPa and never checks 90.0 kPa, which is why the missing clamp goes undetected.",
+ "plugins_loaded": [
+  "reqtrace",
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "plugin:reqtrace:reqtrace",
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T08-depth-review-unrequired",
+  "type": "review",
+  "defects_total": 2,
+  "defects_found": 2,
+  "detection_rate": 1.0,
+  "defects_matched": {
+   "surface-clamp-missing": true,
+   "maintenance-mode-unrequired": true
+  },
+  "false_positives": 0,
+  "other_findings": 4,
+  "findings_total": 6,
+  "edited_files": [],
+  "edited_source": false,
+  "task_success": true,
+  "findings": [
+   {
+    "req_id": "DEP-002",
+    "kind": "defect",
+    "file": "src/depth/alarm.py",
+    "line": 11,
+    "description": "depth_m has no clamp: pressures at or below surface pressure (e.g. 90.0 kPa) return a negative depth instead of 0.0."
+   },
+   {
+    "req_id": "DEP-003",
+    "kind": "unrequired_code",
+    "file": "src/depth/alarm.py",
+    "line": 22,
+    "description": "maintenance_mode parameter and its early return (lines 24-25) are not required by any requirement; it suppresses the alarm (returns False even if active) and skips debounce counting, contradicting DEP-003/DEP-004 behaviour, and is not marked as derived."
+   },
+   {
+    "req_id": "DEP-001",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 6,
+    "description": "Acceptance criterion 603.915 kPa -> 50.00 m is not tested."
+   },
+   {
+    "req_id": "DEP-002",
+    "kind": "weak_test",
+    "file": "tests/test_alarm.py",
+    "line": 11,
+    "description": "Only tests exactly surface pressure; the 90.0 kPa (below surface) criterion is not tested, which is why the missing clamp goes undetected."
+   },
+   {
+    "req_id": "DEP-003",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 16,
+    "description": "Not tested: interrupted sequence 101,101,99,101 -> no alarm, and a sample equal to max_depth_m not counting as deeper (boundary)."
+   },
+   {
+    "req_id": "DEP-004",
+    "kind": "untested_behaviour",
+    "file": "tests/test_alarm.py",
+    "line": 22,
+    "description": "Not tested: interrupted clear sequence 99,99,101,99 -> alarm stays active; also the equal-to-max sample counting as 'at or shallower' is untested."
+   }
+  ],
+  "requirement_lint": 0
+ },
+ "status": "ok",
+ "regraded": true
+}

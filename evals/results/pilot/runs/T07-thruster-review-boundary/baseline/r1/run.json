@@ -1,0 +1,90 @@
+{
+ "task": "T07-thruster-review-boundary",
+ "type": "review",
+ "condition": "baseline",
+ "run": 1,
+ "model": "claude-sonnet-5-5",
+ "exit_code": 0,
+ "timed_out": false,
+ "wall_s": 18.0,
+ "base_commit": "21f9b52709452bea68107a71b9a09feacc94d103",
+ "workspace": "/root/.cache/reqtrace-eval/pilot/T07-thruster-review-boundary/baseline/r1/ws",
+ "subtype": "success",
+ "is_error": false,
+ "num_turns": 5,
+ "duration_s": 16.986,
+ "cost_usd_list": 0.102313,
+ "input_tokens": 10,
+ "cache_read_tokens": 187225,
+ "cache_write_tokens": 10550,
+ "output_tokens": 2162,
+ "tool_calls": 4,
+ "reqtrace_calls": 0,
+ "tools_main": {
+  "Bash": 3,
+  "Write": 1
+ },
+ "tools_subagents": {},
+ "skills_invoked": [],
+ "agents_invoked": [],
+ "permission_denials": [
+  "Bash"
+ ],
+ "result_text": "I wrote four findings to `FINDINGS.json`. I didn't run the tests, and I changed no other file.\n\n- **Defect (THR-002):** `src/thruster/limiter.py:20` uses `abs(cmd) <= DEADBAND`, so a command of exactly \u00b12.0 is zeroed. The requirement says only magnitudes below 2.0 become 0.0, so \u00b12.0 must pass through. The comparison should be `<`.\n- **Weak test (THR-002):** `test_deadband` only checks 1.0 and 5.0. It never tests 1.99, -1.99, 2.0 or -2.0, so it would not have caught the defect above.\n- **Weak test (THR-003):** `test_rate_limit` makes only two calls. It misses the third call (30), the reverse step (from 30, request -50 gives 20) and a request smaller than `max_step` (from 0, request 4 gives 4).\n- **Weak test (THR-001):** `test_clamp` doesn't test exactly 100 and -100, although the range is meant to be inclusive.\n\nTHR-004 (NaN) and the `# implements:` traceability markers looked fine.\n\nMy first attempt to write the file through Bash was denied, so I used the Write tool instead.",
+ "plugins_loaded": [
+  "cc-plugin-agents-md",
+  "cc-plugin-telemetry",
+  "cc-plugin-plugin-authoring"
+ ],
+ "mcp_servers": [
+  "claude-in-chrome"
+ ],
+ "grade": {
+  "task": "T07-thruster-review-boundary",
+  "type": "review",
+  "defects_total": 1,
+  "defects_found": 1,
+  "detection_rate": 1.0,
+  "defects_matched": {
+   "deadband-boundary": true
+  },
+  "false_positives": 0,
+  "other_findings": 3,
+  "findings_total": 4,
+  "edited_files": [],
+  "edited_source": false,
+  "task_success": true,
+  "findings": [
+   {
+    "req_id": "THR-002",
+    "kind": "defect",
+    "file": "src/thruster/limiter.py",
+    "line": 20,
+    "description": "apply_deadband uses abs(cmd) <= DEADBAND, so magnitude exactly 2.0 is zeroed. Requirement says only magnitude < 2.0 gives 0.0; 2.0 -> 2.0 and -2.0 -> -2.0 must pass through. Should be '<'."
+   },
+   {
+    "req_id": "THR-002",
+    "kind": "weak_test",
+    "file": "tests/test_limiter.py",
+    "line": 15,
+    "description": "test_deadband only checks 1.0 and 5.0. It misses the boundary acceptance cases 1.99, -1.99, 2.0 and -2.0 (which would have caught the <= defect) and has no negative-value case."
+   },
+   {
+    "req_id": "THR-003",
+    "kind": "weak_test",
+    "file": "tests/test_limiter.py",
+    "line": 21,
+    "description": "test_rate_limit checks only two calls (10, 20). It omits the third call (30), the reverse step (from 30, request -50 -> 20), and the request smaller than max_step (from 0, request 4 -> 4)."
+   },
+   {
+    "req_id": "THR-001",
+    "kind": "weak_test",
+    "file": "tests/test_limiter.py",
+    "line": 8,
+    "description": "test_clamp does not test the inclusive boundaries (exactly 100 and -100) or values just inside/outside them, though the range is specified as inclusive."
+   }
+  ],
+  "requirement_lint": 0
+ },
+ "status": "ok"
+}

@@ -11,8 +11,8 @@ Built with Claude Code. Inspired by public safety-critical practice (DO-178C-sty
 traceability, independence and structural coverage). It is **not** a qualified tool and makes
 no certification claim. All examples are synthetic.
 
-**Status:** M0–M3 complete (library, server, plugin). The M4 benchmark is built and validated,
-and the pilot has run. The full benchmark results are pending.
+**Status:** M0–M4 complete: library, server, plugin and a 60-run benchmark. The headline
+result is honest and mixed; see [Results](#results-10-tasks--2-arms--3-runs-claude-sonnet-55).
 
 ---
 
@@ -127,16 +127,28 @@ python -m evals run --runs 3 --out evals/results/mvp
 python -m evals report evals/results/mvp
 ```
 
-### Pilot (2 tasks × 2 arms × 1 run, Claude Sonnet 5.5)
+### Results (10 tasks × 2 arms × 3 runs, Claude Sonnet 5.5)
 
-The pilot checks the plumbing. It is not a result.
+![results](evals/results/mvp/summary.png)
 
-![pilot chart](evals/results/pilot/summary.png)
+**On this benchmark, reqtrace did not measurably improve the work, and it cost 23% more per
+run (54% more turns).** Sonnet 5.5 alone solved every task in every run:
 
-Both arms solved both pilot tasks. With reqtrace, test-to-requirement links were more precise
-(0.71 vs 0.37). The cost was more turns (11 vs 5.5) and about 30% more spend. In the review
-task the reqtrace arm never used its tools. Full numbers:
-[`evals/results/pilot/summary.md`](evals/results/pilot/summary.md).
+- all hidden tests passed;
+- every seeded defect was found, with no false positives;
+- the requirement conflict was flagged.
+
+That left nothing for a tool to improve.
+
+The one difference is behaviour. **With reqtrace the agent ran its own tests in 16/30 runs;
+without it, 0/30.** In one task, all three baseline runs shipped a test that fails against
+correct code. Part of that gap comes from the strict permission setup, so it is not a clean
+win.
+
+The plugin was also never used in review tasks (0/9 runs), and the independent verifier was
+never chosen unprompted.
+
+Method, caveats, failure analysis and next steps: **[RESULTS.md](RESULTS.md)**.
 
 ## Limitations, honestly
 
@@ -149,9 +161,10 @@ task the reqtrace arm never used its tools. Full numbers:
   though elicitation still keeps the reviewer's identity away from the model.
 - The commit gate only sees commits Claude makes. `reqtrace gate --verify` works as a normal
   git pre-commit hook for humans.
-- Benchmark: small synthetic tasks, so a strong model may hit a ceiling on task success. The
-  pilot suggests the measurable difference is in traceability quality and cost, not in
-  whether the code works.
+- Benchmark: small synthetic tasks, and the model hit the ceiling. Showing a benefit on
+  correctness needs harder tasks and a permission ablation. Both are planned in
+  [RESULTS.md](RESULTS.md).
+- The skill doesn't yet trigger on review or requirement-change prompts.
 
 ## Repo layout
 

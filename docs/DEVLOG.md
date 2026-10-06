@@ -61,3 +61,25 @@ Things that would have gone wrong had I built from memory:
   $0.16 vs $0.12 list). In the review task the reqtrace arm did not load the skill or call
   any reqtrace tool. Ceiling risk: these tasks may be too easy for a strong model to show a
   difference in task success.
+
+## 2026-10-06 — Full benchmark (60 runs)
+
+- 59/60 runs completed in about 17 minutes at 2-way concurrency. Run 60 hit the plan's session
+  limit. The harness only knew API rate-limit wording, so it graded the run as an agent
+  failure. Fixed (limit messages and "errored with zero tokens" now count as
+  infrastructure), reclassified, and re-run after the reset.
+- Re-reading real outputs found one more grading artefact: in the conflict task, tests for
+  the two contradictory requirements were counted as "failing on correct code", but no
+  correct code exists for them. Excluded them and added `python -m evals regrade`, which
+  re-grades kept workspaces without re-running agents. All 60 runs were re-graded.
+- **Result: ceiling effect.** Both arms 100% on task success, hidden tests, verification
+  strength, defect detection and conflict flagging. reqtrace costs +23% per run (+54% turns).
+- **The real difference was behavioural.** Baseline agents never ran their tests (0/30);
+  reqtrace agents did in 16/30 via `run_verification`. In T02 every baseline run shipped a
+  wrong boundary test (expects WARN exactly 5° from a limit). Caveat: in `dontAsk` mode, a
+  refused shell edit seemed to convince baseline agents that Bash was off altogether. pytest
+  itself was never refused.
+- The pilot's link-precision gap (0.71 vs 0.37) disappeared over 60 runs (0.52 vs 0.52). That
+  is a good interview story about not trusting n=1.
+- The skill never fired on review prompts (0/9) and rarely on change prompts (1/6). The
+  independent verifier was never chosen unprompted (0/30).
