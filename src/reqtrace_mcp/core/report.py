@@ -82,8 +82,12 @@ def render_markdown(
         "",
         "## Requirements",
         "",
-        "| Req | Status | Implemented by | Verified by | Results | Stmt cov | Branch cov |",
-        "|---|---|---|---|---|---|---|",
+    ]
+    mcdc = any(t.coverage and t.coverage.mcdc_measured for t in m.requirements)
+    lines += [
+        "| Req | Status | Implemented by | Verified by | Results | Stmt cov | Branch cov |"
+        + (" MC/DC |" if mcdc else ""),
+        "|---|---|---|---|---|---|---|" + ("---|" if mcdc else ""),
     ]
     for t in m.requirements:
         res = ", ".join(f"{v}" for v in sorted(set(t.test_results.values()))) or "—"
@@ -94,6 +98,7 @@ def render_markdown(
             f"{'<br>'.join(f'`{i}`' for i in t.verified_by) or '—'} | {res} | "
             f"{_pct(cov.statement_pct) if cov else 'n/a'} | "
             f"{_pct(cov.branch_pct) if cov else 'n/a'} |"
+            + (f" {_pct(cov.mcdc_pct) if cov else 'n/a'} |" if mcdc else "")
         )
     lines += ["", "## Requirement text", ""]
     for t in m.requirements:

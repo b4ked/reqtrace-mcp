@@ -27,6 +27,28 @@ the facts; you do the engineering. Never mark your own work as signed off.
 5. **Never weaken a test to make it pass.** If a test that matches the requirement fails, the
    code is wrong, or the requirement is, and that's an issue to flag.
 
+### In C and C++ (`language: cpp` in `.reqtrace.yaml`)
+
+Same rules, comment syntax instead of decorators:
+
+```cpp
+// implements: CRC-001
+uint32_t Extend(uint32_t crc, const uint8_t* data, size_t n) { ... }
+
+// derived: lookup-table builder, no parent requirement
+static void BuildTable() { ... }
+
+// verifies: CRC-001, CRC-006
+TEST(ExtendTest, StandardVectors) { ... }   // also TEST_F, TEST_P, TYPED_TEST(_P)
+```
+
+`/* ... */` works too, as does a trailing comment on the definition line. For a plain test
+executable (exit 0 = pass), put `// verifies:` above its `main`. Don't edit build files to add
+coverage flags: `run_verification` builds with clang coverage itself. C/C++ gaps can also
+include `uncovered_condition` (MC/DC: a condition never shown to change its decision on its
+own) and `unexercised_code` (an implementing function, such as one overload, that no linked
+test calls).
+
 ## Workflow
 
 1. `list_requirements` and `lint_requirements`. Read the requirements you are working on with
@@ -36,7 +58,8 @@ the facts; you do the engineering. Never mark your own work as signed off.
 3. Implement with annotations (rules 1 and 3).
 4. Write or update tests (rule 2).
 5. `run_verification`. Then `find_gaps` and fix, in this order: `failing`, `weakly_verified`,
-   `untested`, `unimplemented`, `uncovered_branch`, `unrequired_code`, `dangling_link`.
+   `untested`, `unimplemented`, `unexercised_code`, `uncovered_branch`,
+   `uncovered_condition`, `unrequired_code`, `dangling_link`.
    Repeat until `find_gaps` reports `clean: true`, or until only items needing a human remain
    (open issues, unconfirmed suggestions, reviews).
 6. If you have the `independent-verifier` agent, ask it to review the requirements you
@@ -57,5 +80,6 @@ nothing wrong, say so plainly; don't invent findings.
 
 ## If the tools are unavailable
 
-The convention still applies: annotate, mark tests, run `pytest` yourself, and state in your
-summary which requirements have passing linked tests.
+The convention still applies: annotate, mark tests, run the tests yourself (`pytest`, or the
+repo's own C/C++ test command), and state in your summary which requirements have passing
+linked tests.

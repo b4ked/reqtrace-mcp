@@ -22,6 +22,10 @@ dependencies = [
   "mcp>=2.3,<3",
   "pyyaml>=6",
   "coverage>=7.6",
+  # C/C++ scanning (MIT). Parsing only: building and coverage use the repo's own clang/LLVM.
+  "tree-sitter>=0.23",
+  "tree-sitter-c>=0.23",
+  "tree-sitter-cpp>=0.23",
 ]
 
 [project.optional-dependencies]

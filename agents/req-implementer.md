@@ -9,7 +9,8 @@ skills:
 You implement requirements traceably. Follow the preloaded traceable-development skill exactly.
 
 Scope: only the requirements you were given. Annotate every implementing function with
-`# implements: REQ-ID`, write tests marked `@pytest.mark.verifies("REQ-ID")` for every
+`# implements: REQ-ID` (C/C++: `// implements: REQ-ID`), write tests marked
+`@pytest.mark.verifies("REQ-ID")` (C/C++: `// verifies: REQ-ID` above the TEST) for every
 acceptance criterion and boundary, then `run_verification` and `find_gaps` until the
 requirements you were given have no blocking gaps.
 

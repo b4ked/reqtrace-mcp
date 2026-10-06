@@ -12,6 +12,7 @@ from .core import requirements as reqmod
 from .core.analysis import build_matrix, find_gaps, load_context
 from .core.config import ReqtraceError, find_root, load_config
 from .core.impact import impact_of_change
+from .core.model import CoverageFigures
 from .core.report import write_evidence
 from .core.runner import run_tests
 from .core.state import flag_issue, record_review, set_suggestion_status
@@ -26,6 +27,17 @@ def _print(obj: Any, as_json: bool, text: str) -> None:
 
 def gate_counts(gaps: list[Any]) -> Counter[str]:
     return Counter(g.kind for g in gaps)
+
+
+def _cov_text(cov: CoverageFigures | None) -> str:
+    if cov is None:
+        return ""
+    out = f" stmt={_pct(cov.statement_pct)} branch={_pct(cov.branch_pct)}"
+    return out + (f" mcdc={_pct(cov.mcdc_pct)}" if cov.mcdc_measured else "")
+
+
+def _pct(v: float | None) -> str:
+    return "n/a" if v is None else f"{v:.0f}%"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -105,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
                 "\n".join(
                     f"{t.requirement.id:10} {t.status.value:16} impl={len(t.implemented_by)} "
                     f"tests={len(t.verified_by)} exercising={len(t.tests_exercising_code)}"
+                    + _cov_text(t.coverage)
                     for t in m.requirements
                 )
                 + f"\nunrequired code: {len(m.unrequired_code)}"

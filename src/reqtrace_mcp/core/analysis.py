@@ -49,6 +49,8 @@ def load_context(cfg: Config) -> Context:
 
 
 def _is_test_fn(item: CodeItem) -> bool:
+    if item.kind == "test":  # C/C++: GoogleTest TEST(...) or an annotated test main
+        return True
     return item.kind != "class" and item.qualname.split(".")[-1].startswith("test")
 
 
@@ -107,6 +109,17 @@ def trace(ctx: Context, req: Requirement, outcomes: dict[str, str]) -> Requireme
         and ctx.cov
         and any(ctx.cov.test_hits(t, p, a, b) for p, a, b in spans)
     ]
+    unexercised: list[str] = []
+    if exercising and ctx.cov:
+        for i in impl:
+            if any(ctx.cov.test_hits(t, i.path, i.body_start, i.end_line) for t in exercising):
+                continue
+            built = ctx.cov.has_lines(i.path, i.body_start, i.end_line)
+            unexercised.append(
+                i.id
+                if built
+                else f"{i.id} (no coverage data: not compiled or not measured in this run)"
+            )
     reviews = latest_reviews(ctx.cfg)
     review = reviews.get(req.id)
     review_current = bool(review) and review.content_hash == requirement_hash(  # type: ignore[union-attr]
@@ -137,6 +150,7 @@ def trace(ctx: Context, req: Requirement, outcomes: dict[str, str]) -> Requireme
         test_results=results,
         tests_exercising_code=exercising,
         coverage=ctx.cov.figures(spans) if ctx.cov and ctx.cov.available and spans else None,
+        unexercised_code=unexercised,
         review=(
             f"{review.decision} by {review.reviewer} ({review.timestamp})"
             + ("" if review_current else " — STALE: content changed since review")
@@ -246,6 +260,19 @@ _NEXT = {
 }
 
 
+_NEXT_CPP = {
+    Status.NOT_IMPLEMENTED: (
+        "unimplemented",
+        "Implement it and add `// implements: {id}` above the implementing function.",
+    ),
+    Status.NOT_VERIFIED: (
+        "untested",
+        "Write tests with `// verifies: {id}` above each TEST(...) (or above `main` of a test "
+        "executable) that check each acceptance criterion, including boundaries.",
+    ),
+}
+
+
 def find_gaps(ctx: Context, matrix: Matrix | None = None) -> list[Gap]:
     m = matrix or build_matrix(ctx)
     gaps: list[Gap] = []
@@ -261,7 +288,7 @@ def find_gaps(ctx: Context, matrix: Matrix | None = None) -> list[Gap]:
     for t in m.requirements:
         rid = t.requirement.id
         if t.status in _NEXT:
-            kind, action = _NEXT[t.status]
+            kind, action = (_NEXT_CPP if ctx.cfg.is_cpp else {}).get(t.status, _NEXT[t.status])
             failing = _failure_lines(
                 ctx, [n for n, v in t.test_results.items() if v in ("failed", "error")]
             )
@@ -294,6 +321,35 @@ def find_gaps(ctx: Context, matrix: Matrix | None = None) -> list[Gap]:
                     next_action="Add a test for the untaken branch, or remove dead code.",
                 )
             )
+        if t.unexercised_code and t.status in (Status.VERIFIED, Status.REVIEWED):
+            gaps.append(
+                Gap(
+                    kind="unexercised_code",
+                    req_id=rid,
+                    location=", ".join(t.unexercised_code[:5]),
+                    detail=f"No passing test linked to {rid} executes "
+                    + "; ".join(t.unexercised_code),
+                    next_action=f"Add a test linked to {rid} that calls it, or fix the "
+                    "`implements` link. Code not built on this platform needs verifying on "
+                    "one where it is.",
+                )
+            )
+        if (
+            t.coverage
+            and t.coverage.missing_mcdc
+            and t.status in (Status.VERIFIED, Status.REVIEWED, Status.WEAKLY_VERIFIED)
+        ):
+            gaps.append(
+                Gap(
+                    kind="uncovered_condition",
+                    req_id=rid,
+                    location=", ".join(t.coverage.missing_mcdc[:5]),
+                    detail=f"{len(t.coverage.missing_mcdc)} condition(s) in implementing code "
+                    "never shown to independently affect their decision (MC/DC)",
+                    next_action="Add test cases where only that condition changes and the "
+                    "outcome changes with it, or simplify the decision.",
+                )
+            )
         if t.review and "STALE" in t.review:
             gaps.append(
                 Gap(
@@ -309,8 +365,13 @@ def find_gaps(ctx: Context, matrix: Matrix | None = None) -> list[Gap]:
                 kind="unrequired_code",
                 location=u,
                 detail=f"{u} is not linked to any requirement",
-                next_action="Remove it, link it with `# implements:`, or mark it "
-                "`# derived: <why>` for a human to review.",
+                next_action=(
+                    "Remove it, link it with `// implements:`, or mark it "
+                    "`// derived: <why>` for a human to review."
+                    if ctx.cfg.is_cpp
+                    else "Remove it, link it with `# implements:`, or mark it "
+                    "`# derived: <why>` for a human to review."
+                ),
             )
         )
     for d in m.dangling_links:

@@ -1,0 +1,13 @@
+# Synthetic requirements for the C runner fixture.
+- id: LIM-001
+  text: clamp shall limit a value to [lo, hi].
+  acceptance: [clamp(-1, 0, 10) == 0, clamp(11, 0, 10) == 10]
+- id: LIM-002
+  text: in_window shall be true when lo <= a <= hi.
+  acceptance: [in_window(0, 0, 45) is true, in_window(46, 0, 45) is false]
+- id: LIM-003
+  text: scale shall double its input.
+  acceptance: [scale(3) == 6]
+- id: LIM-004
+  text: percent shall return part as a whole-number percentage of whole.
+  acceptance: [percent(1, 4) == 25]

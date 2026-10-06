@@ -1,0 +1,11 @@
+language: c
+source_dirs: [src]
+test_dirs: [tests]
+build:
+  commands:
+    - ["{cc}", "{coverage_flags}", -o, "{build_dir}/lim_tests",
+       src/lim.c, tests/lim_unittest.c, tests/mini_gtest_main.c]
+    - ["{cc}", "{coverage_flags}", -o, "{build_dir}/capi_check", src/lim.c, tests/capi_check.c]
+tests:
+  - {binary: "{build_dir}/lim_tests", kind: gtest}
+  - {binary: "{build_dir}/capi_check", kind: exe, source: tests/capi_check.c}

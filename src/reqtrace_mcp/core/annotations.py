@@ -1,4 +1,4 @@
-"""Find trace annotations in Python source and tests.
+"""Find trace annotations in source and tests (Python here; C and C++ in `cfamily`).
 
 Code:  `# implements: REQ-001, REQ-002` or `# derived: <rationale>` on the line(s) directly
        above a def/class (above its decorators), or as a trailing comment on the def line.
@@ -17,6 +17,7 @@ import tokenize
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .cfamily import ALL_SUFFIXES, has_parse_errors, is_cfamily, scan_cfamily
 from .config import Config, rel, safe_path
 from .model import CodeItem
 
@@ -105,6 +106,8 @@ def scan_file(path: Path, rel_path: str, is_test: bool) -> list[CodeItem]:
 
 
 def scan_text(text: str, rel_path: str, is_test: bool) -> list[CodeItem]:
+    if is_cfamily(rel_path):
+        return scan_cfamily(text, rel_path, is_test)
     tree = ast.parse(text, filename=rel_path)
     lines = text.splitlines()
     comments = _comments(text)
@@ -148,15 +151,32 @@ def scan_text(text: str, rel_path: str, is_test: bool) -> list[CodeItem]:
     return items
 
 
-def _python_files(cfg: Config, dirs: list[str]) -> list[Path]:
+def suffixes(cfg: Config) -> tuple[str, ...]:
+    return ALL_SUFFIXES if cfg.is_cpp else (".py",)
+
+
+def _source_files(cfg: Config, dirs: list[str]) -> list[Path]:
+    sfx = suffixes(cfg)
     files: list[Path] = []
     for d in dirs:
         base = safe_path(cfg.root, d)
-        if base.is_file() and base.suffix == ".py":
+        if base.is_file() and base.name.lower().endswith(sfx):
             files.append(base)
         elif base.is_dir():
-            files.extend(p for p in base.rglob("*.py") if ".reqtrace" not in p.parts)
+            files.extend(
+                p
+                for p in base.rglob("*")
+                if p.is_file() and p.name.lower().endswith(sfx) and ".reqtrace" not in p.parts
+            )
     return sorted(set(files))
+
+
+def is_test_path(cfg: Config, rel_path: str) -> bool:
+    """A test file: under a test dir, or (C/C++) named like one, e.g. `*_unittest.cc`."""
+    dirs = [d.strip("/").removeprefix("./") for d in cfg.test_dirs]
+    in_dir = any(d in ("", ".") or rel_path == d or rel_path.startswith(d + "/") for d in dirs)
+    name = rel_path.rsplit("/", 1)[-1]
+    return in_dir or any(fnmatch.fnmatch(name, pat) for pat in cfg.test_file_patterns)
 
 
 def is_ignored(cfg: Config, rel_path: str) -> bool:
@@ -165,30 +185,40 @@ def is_ignored(cfg: Config, rel_path: str) -> bool:
 
 def scan(cfg: Config) -> ScanResult:
     result = ScanResult()
-    test_files = set(_python_files(cfg, cfg.test_dirs))
-    for f in _python_files(cfg, cfg.source_dirs):
-        if f in test_files:
-            continue
+    all_files = set(_source_files(cfg, [*cfg.source_dirs, *cfg.test_dirs]))
+    for f in sorted(all_files):
         rp = rel(cfg.root, f)
+        is_test = is_test_path(cfg, rp)
         try:
-            result.source_items.extend(scan_file(f, rp, is_test=False))
-        except SyntaxError as exc:
-            result.parse_errors.append(f"{rp}:{exc.lineno}: {exc.msg}")
-    for f in sorted(test_files):
-        rp = rel(cfg.root, f)
-        try:
-            items = scan_file(f, rp, is_test=True)
+            text = f.read_text(encoding="utf-8", errors="replace")
+            items = scan_text(text, rp, is_test)
         except SyntaxError as exc:
             result.parse_errors.append(f"{rp}:{exc.lineno}: {exc.msg}")
             continue
-        result.test_items.extend(
-            i for i in items if i.qualname.split(".")[-1].startswith("test") or i.kind == "class"
-        )
+        if is_cfamily(rp) and has_parse_errors(text, rp):
+            result.parse_errors.append(
+                f"{rp}: only partly parsed (macros or syntax tree-sitter cannot handle); "
+                "functions in the unparsed part may be missing"
+            )
+        if not is_test:
+            result.source_items.extend(items)
+        elif is_cfamily(rp):
+            result.test_items.extend(i for i in items if i.kind == "test")
+        else:
+            result.test_items.extend(
+                i
+                for i in items
+                if i.qualname.split(".")[-1].startswith("test") or i.kind == "class"
+            )
     return result
 
 
 def test_nodeid(item: CodeItem) -> str:
-    """pytest node id for a test function (without parametrize suffix)."""
+    """Test id without parametrize/instance suffix: a pytest node id for Python
+    (`tests/test_x.py::TestC::test_y`), `path::Suite.Name` for GoogleTest, `path::main` for a
+    plain C/C++ test executable."""
+    if is_cfamily(item.path):
+        return f"{item.path}::{item.qualname}"
     return f"{item.path}::{item.qualname.replace('.', '::')}"
 
 

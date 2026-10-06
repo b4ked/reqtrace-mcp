@@ -28,6 +28,22 @@ class GateThresholds:
     max_unrequired: int = 0
 
 
+CPP_TEST_PATTERNS = ["*_test.*", "*_tests.*", "*_unittest.*", "*_unittests.*", "test_*.*"]
+
+
+@dataclass
+class TestBinary:
+    """A C/C++ test executable. `gtest` binaries are run one test at a time; `exe` binaries
+    are one test each (exit 0 passes, 77 skips, anything else fails)."""
+
+    __test__ = False
+
+    binary: str
+    kind: str = "gtest"
+    source: str | None = None  # exe: the file whose `main` carries `// verifies:`
+    args: list[str] = field(default_factory=list)
+
+
 @dataclass
 class Config:
     root: Path
@@ -40,6 +56,26 @@ class Config:
     ignore_private: bool = True
     ignore: list[str] = field(default_factory=lambda: ["**/__init__.py"])
     gate: GateThresholds = field(default_factory=GateThresholds)
+    # C and C++ (language: cpp)
+    language: str = "python"
+    test_file_patterns: list[str] = field(default_factory=list)
+    build_commands: list[list[str]] = field(default_factory=list)
+    build_dir: str = ".reqtrace/build"
+    tests: list[TestBinary] = field(default_factory=list)
+    mcdc: bool = True
+    cc: str | None = None
+    cxx: str | None = None
+
+    @property
+    def is_cpp(self) -> bool:
+        return self.language == "cpp"
+
+    def expand(self, arg: str) -> str:
+        """Substitute {build_dir} and {root} in build commands and binary paths. Build
+        commands also get {cc}, {cxx} and {coverage_flags} (see cpp_runner.build)."""
+        return arg.replace("{build_dir}", str(self.root / self.build_dir)).replace(
+            "{root}", str(self.root)
+        )
 
     @property
     def state_dir(self) -> Path:
@@ -108,6 +144,12 @@ def load_config(root: Path) -> Config:
         "timeout_s",
         "unrequired_code",
         "gate",
+        "language",
+        "test_file_patterns",
+        "build",
+        "tests",
+        "coverage",
+        "toolchain",
     }
     unknown = set(data) - known
     if unknown:
@@ -134,9 +176,61 @@ def load_config(root: Path) -> Config:
         if not hasattr(cfg.gate, key):
             raise ReqtraceError(f"{CONFIG_FILE}: unknown gate threshold {key!r}")
         setattr(cfg.gate, key, int(val))
-    for d in [*cfg.source_dirs, *cfg.test_dirs, cfg.requirements]:
+    _load_cpp(cfg, data)
+    for d in [*cfg.source_dirs, *cfg.test_dirs, cfg.requirements, cfg.build_dir]:
         safe_path(root, d)
     return cfg
+
+
+def _str_list(val: Any, what: str) -> list[str]:
+    if not isinstance(val, list) or not all(isinstance(v, (str, int, float)) for v in val):
+        raise ReqtraceError(f"{CONFIG_FILE}: {what} must be a list of strings")
+    return [str(v) for v in val]
+
+
+def _load_cpp(cfg: Config, data: dict[str, Any]) -> None:
+    lang = str(data.get("language", "python")).lower()
+    aliases = {"python": "python", "py": "python", "c": "cpp", "cpp": "cpp", "c++": "cpp"}
+    if lang not in aliases:
+        raise ReqtraceError(f"{CONFIG_FILE}: language must be python, c or cpp, not {lang!r}")
+    cfg.language = aliases[lang]
+    if cfg.is_cpp:
+        cfg.test_file_patterns = list(CPP_TEST_PATTERNS)
+        if "ignore" not in (data.get("unrequired_code") or {}):
+            cfg.ignore = []  # the Python default (**/__init__.py) means nothing here
+    if "test_file_patterns" in data:
+        cfg.test_file_patterns = _str_list(data["test_file_patterns"], "test_file_patterns")
+    build = data.get("build") or {}
+    if not isinstance(build, dict):
+        raise ReqtraceError(f"{CONFIG_FILE}: build must be a mapping")
+    if "dir" in build:
+        cfg.build_dir = str(build["dir"])
+    cfg.build_commands = [
+        _str_list(c, "each build command (an argv list, not a shell string)")
+        for c in build.get("commands") or []
+    ]
+    for t in data.get("tests") or []:
+        if not isinstance(t, dict) or "binary" not in t:
+            raise ReqtraceError(f"{CONFIG_FILE}: each tests entry needs a `binary`")
+        kind = str(t.get("kind", "gtest"))
+        if kind not in ("gtest", "exe"):
+            raise ReqtraceError(f"{CONFIG_FILE}: test kind must be gtest or exe, not {kind!r}")
+        cfg.tests.append(
+            TestBinary(
+                binary=str(t["binary"]),
+                kind=kind,
+                source=str(t["source"]) if t.get("source") else None,
+                args=_str_list(t.get("args", []), "tests[].args"),
+            )
+        )
+    cov = data.get("coverage") or {}
+    if "mcdc" in cov:
+        cfg.mcdc = bool(cov["mcdc"])
+    tc = data.get("toolchain") or {}
+    cfg.cc = str(tc["cc"]) if tc.get("cc") else None
+    cfg.cxx = str(tc["cxx"]) if tc.get("cxx") else None
+    if cfg.is_cpp and not cfg.tests:
+        raise ReqtraceError(f"{CONFIG_FILE}: language cpp needs a `tests:` list of test binaries")
 
 
 def safe_path(root: Path, rel: str | os.PathLike[str]) -> Path:

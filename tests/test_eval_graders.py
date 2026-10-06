@@ -57,8 +57,9 @@ def test_weak_tests_lower_strength_not_success(battery) -> None:  # type: ignore
 def test_untagged_tests_detect_but_do_not_trace(battery) -> None:  # type: ignore[no-untyped-def]
     t, ws, base = battery
     (ws / t.src_rel).write_text(t.reference)
-    untagged = "\n".join(ln for ln in t.domain.visible_test.splitlines()
-                         if "mark.verifies" not in ln)
+    untagged = "\n".join(
+        ln for ln in t.domain.visible_test.splitlines() if "mark.verifies" not in ln
+    )
     (ws / "tests" / "test_bms.py").write_text(untagged)
     g = grade_run(ws, t, base)
     assert g["detection_any_test"] == 1.0 and g["verification_strength"] == 0.0
@@ -70,14 +71,31 @@ def test_review_grading(tmp_path: Path) -> None:
     t = load_task("T07-thruster-review-boundary")
     ws = tmp_path / "ws"
     base = materialize(t, ws)
-    line = next(i + 1 for i, ln in enumerate((ws / t.src_rel).read_text().splitlines())
-                if "abs(cmd) <= DEADBAND" in ln)
-    (ws / "FINDINGS.json").write_text(json.dumps([
-        {"req_id": "THR-002", "kind": "defect", "file": t.src_rel, "line": line,
-         "description": "2.0 is zeroed"},
-        {"req_id": "THR-001", "kind": "defect", "file": t.src_rel, "line": 3,
-         "description": "made up"},
-    ]))
+    line = next(
+        i + 1
+        for i, ln in enumerate((ws / t.src_rel).read_text().splitlines())
+        if "abs(cmd) <= DEADBAND" in ln
+    )
+    (ws / "FINDINGS.json").write_text(
+        json.dumps(
+            [
+                {
+                    "req_id": "THR-002",
+                    "kind": "defect",
+                    "file": t.src_rel,
+                    "line": line,
+                    "description": "2.0 is zeroed",
+                },
+                {
+                    "req_id": "THR-001",
+                    "kind": "defect",
+                    "file": t.src_rel,
+                    "line": 3,
+                    "description": "made up",
+                },
+            ]
+        )
+    )
     g = grade_run(ws, t, base)
     assert g["defects_found"] == 1 and g["false_positives"] == 1
     assert g["task_success"] is False and g["edited_source"] is False
@@ -103,9 +121,17 @@ def test_ambiguity_needs_flag(tmp_path: Path) -> None:
     (ws / t.src_rel).write_text(t.reference)
     g = grade_run(ws, t, base)
     assert g["hidden_pass_rate"] == 1.0 and g["task_success"] is False
-    (ws / "FINDINGS.json").write_text(json.dumps([{"req_id": "DEP-005", "kind":
-                                                   "requirement_issue", "description":
-                                                   "conflicts with DEP-004"}]))
+    (ws / "FINDINGS.json").write_text(
+        json.dumps(
+            [
+                {
+                    "req_id": "DEP-005",
+                    "kind": "requirement_issue",
+                    "description": "conflicts with DEP-004",
+                }
+            ]
+        )
+    )
     assert grade_run(ws, t, base)["task_success"] is True
 
 
@@ -116,9 +142,11 @@ def test_change_workspace_has_two_commits(tmp_path: Path) -> None:
     t = load_task("T05-arm-change")
     ws = tmp_path / "ws"
     materialize(t, ws)
-    log = subprocess.run(["git", "log", "--oneline"], cwd=ws, capture_output=True,
-                         text=True).stdout.splitlines()
+    log = subprocess.run(
+        ["git", "log", "--oneline"], cwd=ws, capture_output=True, text=True
+    ).stdout.splitlines()
     assert len(log) == 2
-    diff = subprocess.run(["git", "show", "HEAD", "--stat"], cwd=ws, capture_output=True,
-                          text=True).stdout
+    diff = subprocess.run(
+        ["git", "show", "HEAD", "--stat"], cwd=ws, capture_output=True, text=True
+    ).stdout
     assert "requirements/arm.yaml" in diff and "src/" not in diff

@@ -25,7 +25,7 @@ class CodeItem(BaseModel):
     id: str = Field(description="path::qualname, path relative to the repo root")
     path: str
     qualname: str
-    kind: Literal["function", "method", "class"]
+    kind: Literal["function", "method", "class", "test"]
     start_line: int = Field(description="First line including decorators")
     def_line: int
     body_start: int = Field(description="First line of the body")
@@ -78,12 +78,23 @@ class Status(str, Enum):
 
 
 class CoverageFigures(BaseModel):
+    """Statements are lines for C/C++ (llvm-cov). Branches are branch outcomes. MC/DC counts
+    conditions shown to independently affect their decision (C/C++ with clang >= 18 only)."""
+
     statements: int = 0
     statements_covered: int = 0
     branches: int = 0
     branches_covered: int = 0
     missing_lines: list[str] = Field(default_factory=list, description="path:line")
-    missing_branches: list[str] = Field(default_factory=list, description="path:from->to")
+    missing_branches: list[str] = Field(
+        default_factory=list, description="path:from->to (Python) or path:line:col true|false"
+    )
+    mcdc_measured: bool = False
+    mcdc_conditions: int = 0
+    mcdc_covered: int = 0
+    missing_mcdc: list[str] = Field(
+        default_factory=list, description="path:line:col condition k/n not shown independent"
+    )
 
     @property
     def statement_pct(self) -> float | None:
@@ -92,6 +103,12 @@ class CoverageFigures(BaseModel):
     @property
     def branch_pct(self) -> float | None:
         return None if not self.branches else 100.0 * self.branches_covered / self.branches
+
+    @property
+    def mcdc_pct(self) -> float | None:
+        if not self.mcdc_measured or not self.mcdc_conditions:
+            return None
+        return 100.0 * self.mcdc_covered / self.mcdc_conditions
 
 
 class RequirementTrace(BaseModel):
@@ -104,6 +121,10 @@ class RequirementTrace(BaseModel):
         default_factory=list, description="Linked tests that executed implementing code"
     )
     coverage: CoverageFigures | None = None
+    unexercised_code: list[str] = Field(
+        default_factory=list,
+        description="Implementing items no passing linked test executes (when others are)",
+    )
     review: str | None = Field(default=None, description="Latest review decision, if current")
     open_issues: int = 0
 
@@ -134,6 +155,8 @@ GapKind = Literal[
     "stale_suggestion",
     "unconfirmed_suggestion",
     "uncovered_branch",
+    "uncovered_condition",
+    "unexercised_code",
     "open_issue",
     "requirement_quality",
 ]

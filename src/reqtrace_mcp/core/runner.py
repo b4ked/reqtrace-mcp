@@ -1,7 +1,7 @@
 """Run the target repo's tests under coverage, with per-test contexts.
 
-Security: the only process started is the repo's own Python running `coverage run -m pytest`.
-The argv is built here from config; no caller ever supplies a command. No shell is used.
+Python: the repo's own interpreter runs `coverage run -m pytest`. C/C++: see `cpp_runner`.
+Security: argv is built here from config; no caller ever supplies a command. No shell is used.
 """
 
 from __future__ import annotations
@@ -47,14 +47,27 @@ def load_run(cfg: Config, run_id: str | None = None) -> RunSummary | None:
 
 
 def fingerprint(cfg: Config) -> str:
-    """Hash of every Python file under source and test dirs: tells us if results are stale."""
+    """Hash of every code file under source and test dirs: tells us if results are stale."""
     import hashlib
 
+    from .annotations import suffixes
+
+    sfx = suffixes(cfg)
     h = hashlib.sha256()
     for d in [*cfg.source_dirs, *cfg.test_dirs]:
         base = cfg.root / d
-        files = [base] if base.is_file() else sorted(base.rglob("*.py")) if base.is_dir() else []
-        for f in files:
+        files = (
+            [base]
+            if base.is_file()
+            else sorted(
+                f
+                for f in base.rglob("*")
+                if f.is_file() and f.name.lower().endswith(sfx) and ".reqtrace" not in f.parts
+            )
+            if base.is_dir()
+            else []
+        )
+        for f in sorted(set(files)):
             h.update(f.relative_to(cfg.root).as_posix().encode())
             h.update(f.read_bytes())
     return h.hexdigest()[:16]
@@ -92,14 +105,37 @@ def _check_env(python: str, cfg: Config) -> None:
         )
 
 
-def run_tests(cfg: Config, node_ids: list[str] | None = None) -> RunSummary:
-    python = cfg.resolve_python()
-    _check_env(python, cfg)
+def _new_run(cfg: Config) -> tuple[str, Path]:
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + secrets.token_hex(3)
     rdir = runs_dir(cfg) / run_id
     rdir.mkdir(parents=True, exist_ok=True)
-    results_file = rdir / "results.json"
     (rdir / "fingerprint.txt").write_text(fingerprint(cfg))
+    return run_id, rdir
+
+
+def _run_cpp(cfg: Config, node_ids: list[str] | None) -> RunSummary:
+    from .cpp_runner import run_cpp_tests, summary_for
+
+    run_id, rdir = _new_run(cfg)
+    started = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    t0 = time.monotonic()
+    outcomes, command, timed_out, tail = run_cpp_tests(cfg, rdir, target_env(), node_ids)
+    summary = summary_for(
+        run_id, started, time.monotonic() - t0, outcomes, command, timed_out, tail
+    )
+    (rdir / "output.txt").write_text(tail, encoding="utf-8")
+    (rdir / "run.json").write_text(summary.model_dump_json(indent=1), encoding="utf-8")
+    (runs_dir(cfg) / "LATEST").write_text(run_id)
+    return summary
+
+
+def run_tests(cfg: Config, node_ids: list[str] | None = None) -> RunSummary:
+    if cfg.is_cpp:
+        return _run_cpp(cfg, node_ids)
+    python = cfg.resolve_python()
+    _check_env(python, cfg)
+    run_id, rdir = _new_run(cfg)
+    results_file = rdir / "results.json"
     cmd = [
         python,
         "-m",
@@ -171,18 +207,35 @@ def run_tests(cfg: Config, node_ids: list[str] | None = None) -> RunSummary:
 
 
 class CoverageIndex:
-    """Per-test executed lines and per-file statement/branch data for one run."""
+    """Per-test executed lines and per-file line/branch/MC/DC data for one run.
+
+    Internally every language uses one shape (what `cpp_runner` writes as
+    `coverage_norm.json`): per file `executed_lines`, `missing_lines`,
+    `branches` = [[line, label, covered]], `mcdc` = [[line, label, covered]]; per test
+    {path: lines}. Python data is converted from coverage.py's `.coverage` file.
+    """
 
     def __init__(self, cfg: Config, run_id: str) -> None:
-        import coverage
-
         self.cfg = cfg
-        self.data_file = runs_dir(cfg) / run_id / ".coverage"
-        self.available = self.data_file.exists()
+        rdir = runs_dir(cfg) / run_id
         self.lines_by_test: dict[str, dict[str, set[int]]] = {}
         self.files: dict[str, dict[str, Any]] = {}
-        if not self.available:
-            return
+        self.mcdc_measured = False
+        norm = rdir / "coverage_norm.json"
+        self.data_file = rdir / ".coverage"
+        self.available = norm.exists() or self.data_file.exists()
+        if norm.exists():
+            data = json.loads(norm.read_text())
+            self.mcdc_measured = bool(data.get("mcdc"))
+            self.files = data.get("files", {})
+            for node, files in data.get("tests", {}).items():
+                self.lines_by_test[PARAM_RE.sub("", node)] = {p: set(v) for p, v in files.items()}
+        elif self.data_file.exists():
+            self._load_python(rdir)
+
+    def _load_python(self, rdir: Path) -> None:
+        import coverage
+
         data = coverage.CoverageData(basename=str(self.data_file))
         data.read()
         for abs_file in data.measured_files():
@@ -197,7 +250,7 @@ class CoverageIndex:
                     self.lines_by_test.setdefault(base, {}).setdefault(relp, set()).add(line)
         cov = coverage.Coverage(data_file=str(self.data_file))
         cov.load()
-        report_path = runs_dir(cfg) / run_id / "coverage.json"
+        report_path = rdir / "coverage.json"
         try:
             cov.json_report(outfile=str(report_path), show_contexts=False)
         except coverage.exceptions.NoDataError:
@@ -205,8 +258,19 @@ class CoverageIndex:
         report = json.loads(report_path.read_text())
         for name, info in report.get("files", {}).items():
             relp = self._rel(name)
-            if relp is not None:
-                self.files[relp] = info
+            if relp is None:
+                continue
+
+            def label(a: int, b: int) -> str:
+                return f"{a}->{b if b > 0 else 'exit'}"
+
+            self.files[relp] = {
+                "executed_lines": info.get("executed_lines", []),
+                "missing_lines": info.get("missing_lines", []),
+                "branches": [[a, label(a, b), True] for a, b in info.get("executed_branches", [])]
+                + [[a, label(a, b), False] for a, b in info.get("missing_branches", [])],
+                "mcdc": [],
+            }
 
     def _rel(self, name: str) -> str | None:
         p = Path(name)
@@ -222,8 +286,19 @@ class CoverageIndex:
         lines = self.lines_by_test.get(nodeid, {}).get(path, set())
         return any(first <= ln <= last for ln in lines)
 
+    def has_lines(self, path: str, first: int, last: int) -> bool:
+        """Whether coverage data exists for any line in the span (False: not compiled or
+        not measured in this run)."""
+        info = self.files.get(path)
+        if not info:
+            return False
+        return any(
+            first <= ln <= last
+            for ln in [*info.get("executed_lines", []), *info.get("missing_lines", [])]
+        )
+
     def figures(self, spans: list[tuple[str, int, int]]) -> CoverageFigures:
-        fig = CoverageFigures()
+        fig = CoverageFigures(mcdc_measured=self.mcdc_measured)
         for path, first, last in spans:
             info = self.files.get(path)
             if not info:
@@ -233,9 +308,16 @@ class CoverageIndex:
             fig.statements += len(executed) + len(missing)
             fig.statements_covered += len(executed)
             fig.missing_lines += [f"{path}:{ln}" for ln in sorted(missing)]
-            eb = [b for b in info.get("executed_branches", []) if first <= b[0] <= last]
-            mb = [b for b in info.get("missing_branches", []) if first <= b[0] <= last]
-            fig.branches += len(eb) + len(mb)
-            fig.branches_covered += len(eb)
-            fig.missing_branches += [f"{path}:{a}->{b if b > 0 else 'exit'}" for a, b in mb]
+            for ln, label, covered in info.get("branches", []):
+                if first <= ln <= last:
+                    fig.branches += 1
+                    fig.branches_covered += bool(covered)
+                    if not covered:
+                        fig.missing_branches.append(f"{path}:{label}")
+            for ln, label, covered in info.get("mcdc", []):
+                if first <= ln <= last:
+                    fig.mcdc_conditions += 1
+                    fig.mcdc_covered += bool(covered)
+                    if not covered:
+                        fig.missing_mcdc.append(f"{path}:{label}")
         return fig

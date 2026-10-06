@@ -13,7 +13,7 @@ import subprocess
 
 from . import requirements as reqmod
 from .analysis import Context, verifying_tests
-from .annotations import scan_text, test_nodeid
+from .annotations import is_test_path, scan_text, suffixes, test_nodeid
 from .config import ReqtraceError, rel
 from .model import CodeItem, ImpactResult
 from .state import latest_reviews
@@ -69,10 +69,11 @@ def impact_of_change(
     if not include_uncommitted:
         diff_args.append("HEAD")
     changes = _parse_diff(_git(ctx, *diff_args, "--"))
+    code_sfx = suffixes(ctx.cfg)
     if include_uncommitted:
         for path in _git(ctx, "ls-files", "--others", "--exclude-standard").splitlines():
             full = ctx.cfg.root / path
-            if full.suffix in (".py", ".yaml", ".yml") and full.is_file():
+            if full.name.lower().endswith((*code_sfx, ".yaml", ".yml")) and full.is_file():
                 n = len(full.read_text(encoding="utf-8", errors="replace").splitlines())
                 changes[path] = (set(), set(range(1, n + 1)), None)
 
@@ -93,9 +94,13 @@ def impact_of_change(
     test_paths = {i.path for i in ctx.scan.test_items}
 
     for path, (old_lines, new_lines, old_path) in changes.items():
-        if not path.endswith(".py"):
+        if not path.lower().endswith(code_sfx):
             continue
-        is_test = path in test_paths or "test" in path.split("/")[-1]
+        is_test = (
+            path in test_paths
+            or is_test_path(ctx.cfg, path)
+            or (not ctx.cfg.is_cpp and "test" in path.split("/")[-1])
+        )
         hits = _hit(current.get(path, []), new_lines)
         if old_path and old_lines:
             old_text = _git(ctx, "show", f"{base_ref}:{old_path}", check=False)
@@ -108,7 +113,7 @@ def impact_of_change(
                 note(rid, f"implementing code changed: {item.id}")
             for rid in item.verifies:
                 note(rid, f"verifying test changed: {item.id}")
-            if is_test and item.kind != "class":
+            if is_test and item.kind != "class" and (item.kind == "test" or not ctx.cfg.is_cpp):
                 rerun.add(test_nodeid(item))
 
     # Requirement text changes

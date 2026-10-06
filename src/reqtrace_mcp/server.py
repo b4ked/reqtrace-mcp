@@ -58,11 +58,13 @@ R = TypeVar("R")
 
 INSTRUCTIONS = """\
 reqtrace makes your work on this repository traceable and verifiable.
-Requirements live in YAML (see list_requirements). Link code with a comment
+Requirements live in YAML (see list_requirements). Python: link code with a comment
 `# implements: REQ-ID` directly above the function, and tests with
-`@pytest.mark.verifies("REQ-ID")`. Workflow: lint_requirements -> flag unclear requirements
-with flag_requirement_issue instead of guessing -> implement with annotations -> write tests
-for every acceptance criterion -> run_verification -> find_gaps until clean -> evidence_report.
+`@pytest.mark.verifies("REQ-ID")`. C/C++: `// implements: REQ-ID` above the function and
+`// verifies: REQ-ID` above the TEST(...) or test main.
+Workflow: lint_requirements -> flag unclear requirements with flag_requirement_issue
+instead of guessing -> implement with annotations -> write tests for every acceptance
+criterion -> run_verification -> find_gaps until clean -> evidence_report.
 A requirement is only VERIFIED when a linked test passes AND executes the implementing code.
 You cannot sign off your own work: record_review asks a human.
 """
@@ -102,7 +104,7 @@ class VerificationResult(BaseModel):
     outcomes: dict[str, int]
     failed_tests: list[str]
     requirement_status: dict[str, Status]
-    output_tail: str = Field(description="Tail of pytest output, for diagnosing errors")
+    output_tail: str = Field(description="Tail of test output, for diagnosing errors")
 
 
 class CoverageResult(BaseModel):
@@ -260,9 +262,11 @@ def create_server(root: str | Path | None = None) -> MCPServer:
     @mcp.tool(annotations=WRITES_STATE)
     @tool_errors
     def run_verification(req_ids: list[str] | None = None) -> VerificationResult:
-        """Run the repo's pytest suite under coverage (per-test contexts) and map results to
-        requirements. With `req_ids`, runs only tests linked to those requirements. Executes the
-        repository's own tests; the command comes from config, never from arguments."""
+        """Run the repo's tests under coverage and map results to requirements. Python:
+        pytest with per-test contexts. C/C++: builds with clang coverage (and MC/DC) using the
+        build commands in .reqtrace.yaml, then runs each test in its own process. With
+        `req_ids`, runs only tests linked to those requirements. The commands come from the
+        repo's config, never from arguments."""
         c = ctx()
         nodes = None
         if req_ids:
@@ -286,8 +290,9 @@ def create_server(root: str | Path | None = None) -> MCPServer:
     @mcp.tool(annotations=RO)
     @tool_errors
     def coverage_report(req_id: str | None = None) -> CoverageResult:
-        """Statement and branch coverage of each requirement's implementing code from the
-        latest run, with uncovered lines and branches."""
+        """Statement and branch coverage (plus MC/DC for C/C++ with clang >= 18) of each
+        requirement's implementing code from the latest run, with uncovered lines, branches
+        and conditions, and implementing code that no linked test executes."""
         c = ctx()
         if req_id:
             known_req(c, req_id)
@@ -427,12 +432,15 @@ def create_server(root: str | Path | None = None) -> MCPServer:
             f"1. get_requirement {req_id} and lint_requirements. If it is ambiguous, conflicts "
             "with another requirement, or is untestable, call flag_requirement_issue and stop "
             "for a human instead of guessing.\n"
-            f"2. Implement it. Put `# implements: {req_id}` directly above each function that "
-            "implements it. Add nothing the requirement does not ask for.\n"
-            f'3. Write tests marked `@pytest.mark.verifies("{req_id}")` covering every '
+            f"2. Implement it. Put `# implements: {req_id}` (`// implements: {req_id}` in C/C++) "
+            "directly above each function that implements it. Add nothing the requirement "
+            "does not ask for.\n"
+            f'3. Write tests marked `@pytest.mark.verifies("{req_id}")` (C/C++: a '
+            f"`// verifies: {req_id}` comment above the TEST) covering every "
             "acceptance criterion, including both sides of each boundary.\n"
             "4. run_verification, then find_gaps. Fix failing, weakly_verified, "
-            "uncovered_branch and unrequired_code gaps. Never weaken a test to make it pass.\n"
+            "uncovered_branch, uncovered_condition, unexercised_code and unrequired_code "
+            "gaps. Never weaken a test to make it pass.\n"
             "5. evidence_report, then ask the human to review it. Do not call record_review "
             "yourself unless the human asks you to start the sign-off."
         )
