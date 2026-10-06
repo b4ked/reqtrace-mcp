@@ -14,7 +14,9 @@ This spec turns `Brief - reqtrace-mcp` into concrete formats, interfaces and an 
 
 **In (MVP = M0–M4):** Python target repos tested with pytest; YAML requirements; function-level trace links; statement + branch coverage; gap analysis; git-diff change impact; human review ledger; Markdown evidence report; stdio transport; skill, 2 sub-agents, commit hook; 10-task eval, 2 conditions, 3 runs each.
 
-**Later (M5–M6):** HTML evidence report and dogfooding CI; 25–40 eval tasks; skill-only ablation; Streamable HTTP transport; `claude plugin eval` suite; mutation-based test strength.
+**Later (M5–M6):** HTML evidence report (optional small TypeScript viewer if time allows) and dogfooding CI; MCP registry listing; 25–40 eval tasks; skill-only ablation; Streamable HTTP transport; `claude plugin eval` suite; mutation-based test strength.
+
+**Licence and provenance:** Apache-2.0; README states it was built with Claude Code.
 
 **Out (documented as future work):** MC/DC coverage, non-Python targets, ReqIF/DOORS import, LLM calls inside the server, any compliance claim.
 
@@ -245,7 +247,7 @@ LLM-as-judge is only a fallback for matching free-text findings, and only after 
 
 ### 7.6 Output
 
-`evals/results/<timestamp>/` with raw JSON per run, `RESULTS.md` (method, table, limitations, failure analysis per task, including where the plugin did not help), and one chart (success and verification strength by condition, with CIs).
+`evals/results/<timestamp>/` with raw JSON per run, `RESULTS.md` (method, table, limitations, failure analysis per task, including where the plugin did not help), and one chart (success and verification strength by condition, with CIs). A 2-task, 1-run smoke subset runs in CI (M5) to catch harness breakage; the full suite is run by hand because it costs money.
 
 ### 7.7 Budget (estimate, to confirm with a pilot)
 
