@@ -60,7 +60,8 @@ def main(argv: list[str] | None = None) -> int:
     lk = sub.add_parser("links", help="Accept or reject agent-suggested links")
     lk.add_argument("action", choices=["accept", "reject"])
     lk.add_argument("suggestion_id")
-    sub.add_parser("gate", help="Exit non-zero if gaps exceed thresholds in .reqtrace.yaml")
+    gt = sub.add_parser("gate", help="Exit 1 if gaps exceed thresholds in .reqtrace.yaml")
+    gt.add_argument("--verify", action="store_true", help="Run the tests first")
     s = sub.add_parser("serve", help="Run the MCP server on stdio")
     s.add_argument("--transport", default="stdio", choices=["stdio"])
     args = p.parse_args(argv)
@@ -150,6 +151,9 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"{sg.id}: {sg.status}")
         elif args.cmd == "gate":
+            if args.verify:
+                run_tests(cfg)
+                ctx = load_context(cfg)
             return _gate(cfg, ctx, args.json)
         return 0
     except ReqtraceError as exc:

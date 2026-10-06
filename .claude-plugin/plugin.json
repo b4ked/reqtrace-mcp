@@ -1,0 +1,27 @@
+{
+  "name": "reqtrace",
+  "version": "0.1.0",
+  "description": "Make Claude prove its work: requirements traceability, verification that tests really exercise the code, independent review and human sign-off.",
+  "author": {
+    "name": "Hishan Parry"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "requirements",
+    "traceability",
+    "verification",
+    "testing",
+    "safety"
+  ],
+  "mcpServers": {
+    "reqtrace": {
+      "command": "uvx",
+      "args": [
+        "--quiet",
+        "--from",
+        "${CLAUDE_PLUGIN_ROOT}",
+        "reqtrace-mcp"
+      ]
+    }
+  }
+}

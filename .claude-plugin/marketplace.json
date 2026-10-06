@@ -1,0 +1,12 @@
+{
+  "name": "reqtrace-mcp",
+  "description": "reqtrace: traceable, verifiable agentic development",
+  "owner": { "name": "Hishan Parry" },
+  "plugins": [
+    {
+      "name": "reqtrace",
+      "source": "./",
+      "description": "Requirements traceability and verification evidence for Claude Code"
+    }
+  ]
+}
