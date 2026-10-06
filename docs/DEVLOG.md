@@ -21,3 +21,26 @@ Things that would have gone wrong had I built from memory:
 - In the toy repo, the unannotated `extra_feature()` showed only import-time coverage: a clean example of "unrequired code" for the README.
 
 **Open risk for M1:** coverage's `dynamic_context = test_function` names contexts differently from pytest node IDs (`pkg.test_mod.test_fn` vs `tests/test_mod.py::test_fn`). Need a mapping, including parametrised tests.
+
+## 2026-10-06 — M1–M3 build and first live runs
+
+- M1 worked on the example first time; the most useful early fix was making `failing` gaps name
+  the exact parametrised case and its assertion, because that's what an agent needs to act.
+- In-memory MCP client tests surfaced that a client without elicitation support gets a
+  protocol error from `record_review` (-32021), before the tool body runs. That is the right
+  outcome (nothing recorded) but it arrives as an exception group in-process.
+- **First live Claude Code run found a real bug.** The plugin starts the server with
+  `uvx --from <plugin dir>`. uvx puts its private venv first on PATH, so `python3` resolved to
+  reqtrace's own interpreter, which has no access to the repo's pytest. Unit tests never saw
+  this because they run in one environment. Fix: resolve the target interpreter with the
+  server's venv removed from PATH, and run tests in that cleaned environment.
+- uv caches `--from <dir>` builds keyed on `pyproject.toml` only, so source edits were not
+  picked up. Added `[tool.uv] cache-keys` for `src/**/*.py`.
+- The hosted workspace tells child Claude sessions to skip plugin MCP servers
+  (`CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS=1`) and to sync this session's skills. For clean,
+  comparable eval runs the harness removes those variables and gives each run a fresh `HOME`.
+- Second live run (after the fix): skill auto-loaded, ALT-004 implemented, weak ALT-002 test
+  replaced, a real ambiguity in ALT-004 flagged, independent verifier found a real defect
+  (invalid altitude short-circuited floor validation), all four requirements VERIFIED.
+  21 turns, ~$0.29 list price. Run-to-run variance already visible: run 1 marked
+  `altitude_in_metres` as derived, run 2 left it for the human.
