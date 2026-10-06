@@ -1,0 +1,32 @@
+# Synthetic example requirements for a toy low-altitude alerter. Invented for this project.
+- id: ALT-001
+  title: Low-altitude alert
+  text: The alerter shall raise an alert when radio altitude is below the alert floor.
+  rationale: Gives the operator time to react before terrain.
+  acceptance:
+    - altitude 499 ft with floor 500 ft -> alert
+    - altitude 500 ft with floor 500 ft -> no alert
+
+- id: ALT-002
+  title: Alert floor configuration
+  text: The alert floor shall be configurable between 100 ft and 2000 ft inclusive.
+  acceptance:
+    - floor 100 ft accepted
+    - floor 2000 ft accepted
+    - floor 99 ft rejected with ValueError
+    - floor 2001 ft rejected with ValueError
+
+- id: ALT-003
+  title: Invalid altitude input
+  text: The alerter shall treat a negative or non-finite altitude as invalid and raise an alert.
+  rationale: Fail safe on sensor faults.
+  acceptance:
+    - altitude -1 ft -> alert
+    - altitude NaN -> alert
+
+- id: ALT-004
+  title: Alert hysteresis
+  text: Once raised, the alert shall clear only when altitude exceeds the floor by 50 ft.
+  acceptance:
+    - alert at 450 ft, then 520 ft -> alert remains
+    - alert at 450 ft, then 551 ft -> alert clears

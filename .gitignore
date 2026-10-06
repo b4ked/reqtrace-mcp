@@ -1,0 +1,11 @@
+__pycache__/
+*.egg-info/
+.venv/
+dist/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.reqtrace/runs/
+examples/*/.reqtrace/
+evals/results/*/runs/

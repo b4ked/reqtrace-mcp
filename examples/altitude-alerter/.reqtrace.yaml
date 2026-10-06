@@ -1,0 +1,3 @@
+source_dirs: [src]
+test_dirs: [tests]
+pytest_args: ["--import-mode=importlib"]
