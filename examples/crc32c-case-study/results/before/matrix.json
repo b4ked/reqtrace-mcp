@@ -1,0 +1,482 @@
+{
+ "generated_at": "2026-10-06T16:33:28+00:00",
+ "run_id": "20261006T163319Z-4269b1",
+ "requirements": [
+  {
+   "requirement": {
+    "id": "CRC-001",
+    "title": "CRC-32C value of a buffer",
+    "text": "The library shall compute the CRC-32C (Castagnoli) checksum of a byte buffer: polynomial 0x1EDC6F41, reflected input and output, initial value and final XOR 0xFFFFFFFF.",
+    "rationale": "The checksum used by iSCSI, SCTP, ext4 and others (RFC 3720 section 12.1).",
+    "acceptance": [
+     "32 bytes of 0x00 -> 0x8A9136AA (RFC 3720 B.4)",
+     "32 bytes of 0xFF -> 0x62A8AB43 (RFC 3720 B.4)",
+     "bytes 0x00, 0x01, ..., 0x1F -> 0x46DD794E (RFC 3720 B.4)",
+     "bytes 0x1F, 0x1E, ..., 0x00 -> 0x113FDB5C (RFC 3720 B.4)",
+     "ASCII \"123456789\" -> 0xE3069283 (the standard CRC-32/ISCSI check value)"
+    ],
+    "parent": null,
+    "tags": [
+     "api"
+    ],
+    "source": "requirements/crc32c.yaml:10"
+   },
+   "status": "VERIFIED",
+   "implemented_by": [
+    "include/crc32c/crc32c.h::crc32c::Crc32c(const uint8_t*, size_t)",
+    "src/crc32c.cc::crc32c::Extend"
+   ],
+   "verified_by": [
+    "src/crc32c_extend_unittests.h::ExtendTest.StandardResults",
+    "src/crc32c_unittest.cc::Crc32CTest.Crc32c"
+   ],
+   "test_results": {
+    "src/crc32c_extend_unittests.h::ExtendTest.StandardResults": "passed",
+    "src/crc32c_unittest.cc::Crc32CTest.Crc32c": "passed"
+   },
+   "tests_exercising_code": [
+    "src/crc32c_extend_unittests.h::ExtendTest.StandardResults",
+    "src/crc32c_unittest.cc::Crc32CTest.Crc32c"
+   ],
+   "coverage": {
+    "statements": 9,
+    "statements_covered": 8,
+    "branches": 2,
+    "branches_covered": 1,
+    "missing_lines": [
+     "src/crc32c.cc:28"
+    ],
+    "missing_branches": [
+     "src/crc32c.cc:22:7 false"
+    ],
+    "mcdc_measured": true,
+    "mcdc_conditions": 0,
+    "mcdc_covered": 0,
+    "missing_mcdc": []
+   },
+   "unexercised_code": [],
+   "review": null,
+   "open_issues": 0
+  },
+  {
+   "requirement": {
+    "id": "CRC-002",
+    "title": "Incremental computation",
+    "text": "Extending the CRC of buffer A with buffer B shall give the CRC of A followed by B, for every split point, so data can be checksummed in pieces.",
+    "rationale": "",
+    "acceptance": [
+     "Extend(Crc32c(\"hello \"), \"world\") == Crc32c(\"hello world\")",
+     "every split of a 48-byte buffer into up to three pieces gives the whole-buffer CRC"
+    ],
+    "parent": null,
+    "tags": [
+     "api"
+    ],
+    "source": "requirements/crc32c.yaml:24"
+   },
+   "status": "VERIFIED",
+   "implemented_by": [
+    "src/crc32c.cc::crc32c::Extend"
+   ],
+   "verified_by": [
+    "src/crc32c_extend_unittests.h::ExtendTest.BufferSlicing",
+    "src/crc32c_extend_unittests.h::ExtendTest.HelloWorld",
+    "src/crc32c_extend_unittests.h::ExtendTest.LargeBufferSlicing"
+   ],
+   "test_results": {
+    "src/crc32c_extend_unittests.h::ExtendTest.BufferSlicing": "passed",
+    "src/crc32c_extend_unittests.h::ExtendTest.HelloWorld": "passed",
+    "src/crc32c_extend_unittests.h::ExtendTest.LargeBufferSlicing": "passed"
+   },
+   "tests_exercising_code": [
+    "src/crc32c_extend_unittests.h::ExtendTest.BufferSlicing",
+    "src/crc32c_extend_unittests.h::ExtendTest.HelloWorld",
+    "src/crc32c_extend_unittests.h::ExtendTest.LargeBufferSlicing"
+   ],
+   "coverage": {
+    "statements": 6,
+    "statements_covered": 5,
+    "branches": 2,
+    "branches_covered": 1,
+    "missing_lines": [
+     "src/crc32c.cc:28"
+    ],
+    "missing_branches": [
+     "src/crc32c.cc:22:7 false"
+    ],
+    "mcdc_measured": true,
+    "mcdc_conditions": 0,
+    "mcdc_covered": 0,
+    "missing_mcdc": []
+   },
+   "unexercised_code": [],
+   "review": null,
+   "open_issues": 0
+  },
+  {
+   "requirement": {
+    "id": "CRC-003",
+    "title": "Empty input",
+    "text": "The CRC of an empty buffer shall be 0, and extending any CRC with zero bytes shall return that CRC unchanged.",
+    "rationale": "",
+    "acceptance": [
+     "Crc32c(data, 0) == 0",
+     "Extend(0x12345678, data, 0) == 0x12345678"
+    ],
+    "parent": null,
+    "tags": [
+     "api",
+     "boundary"
+    ],
+    "source": "requirements/crc32c.yaml:34"
+   },
+   "status": "NOT_VERIFIED",
+   "implemented_by": [
+    "src/crc32c.cc::crc32c::Extend"
+   ],
+   "verified_by": [],
+   "test_results": {},
+   "tests_exercising_code": [],
+   "coverage": {
+    "statements": 6,
+    "statements_covered": 5,
+    "branches": 2,
+    "branches_covered": 1,
+    "missing_lines": [
+     "src/crc32c.cc:28"
+    ],
+    "missing_branches": [
+     "src/crc32c.cc:22:7 false"
+    ],
+    "mcdc_measured": true,
+    "mcdc_conditions": 0,
+    "mcdc_covered": 0,
+    "missing_mcdc": []
+   },
+   "unexercised_code": [],
+   "review": null,
+   "open_issues": 0
+  },
+  {
+   "requirement": {
+    "id": "CRC-004",
+    "title": "C API",
+    "text": "The C functions crc32c_value and crc32c_extend shall return the same results as the C++ functions Crc32c and Extend.",
+    "rationale": "",
+    "acceptance": [
+     "crc32c_value gives the CRC-001 vectors",
+     "crc32c_extend(crc32c_value(\"hello \"), \"world\") == crc32c_value(\"hello world\")"
+    ],
+    "parent": null,
+    "tags": [
+     "api",
+     "c"
+    ],
+    "source": "requirements/crc32c.yaml:44"
+   },
+   "status": "VERIFIED",
+   "implemented_by": [
+    "src/crc32c.cc::crc32c::crc32c_extend",
+    "src/crc32c.cc::crc32c::crc32c_value"
+   ],
+   "verified_by": [
+    "src/crc32c_capi_unittest.c::main"
+   ],
+   "test_results": {
+    "src/crc32c_capi_unittest.c::main": "passed"
+   },
+   "tests_exercising_code": [
+    "src/crc32c_capi_unittest.c::main"
+   ],
+   "coverage": {
+    "statements": 6,
+    "statements_covered": 6,
+    "branches": 0,
+    "branches_covered": 0,
+    "missing_lines": [],
+    "missing_branches": [],
+    "mcdc_measured": true,
+    "mcdc_conditions": 0,
+    "mcdc_covered": 0,
+    "missing_mcdc": []
+   },
+   "unexercised_code": [],
+   "review": null,
+   "open_issues": 0
+  },
+  {
+   "requirement": {
+    "id": "CRC-005",
+    "title": "Convenience overloads",
+    "text": "The C++ overloads taking const char*, std::string, std::string_view and std::byte* shall return the same CRC as the uint8_t* form for the same bytes.",
+    "rationale": "",
+    "acceptance": [
+     "each overload gives the CRC-001 vectors"
+    ],
+    "parent": null,
+    "tags": [
+     "api"
+    ],
+    "source": "requirements/crc32c.yaml:54"
+   },
+   "status": "VERIFIED",
+   "implemented_by": [
+    "include/crc32c/crc32c.h::crc32c::Crc32c(const char*, size_t)",
+    "include/crc32c/crc32c.h::crc32c::Crc32c(const std::byte*, size_t)",
+    "include/crc32c/crc32c.h::crc32c::Crc32c(const std::string&)",
+    "include/crc32c/crc32c.h::crc32c::Crc32c(const std::string_view&)"
+   ],
+   "verified_by": [
+    "src/crc32c_unittest.cc::CRC32CTest.Crc32cCharPointer",
+    "src/crc32c_unittest.cc::CRC32CTest.Crc32cStdString",
+    "src/crc32c_unittest.cc::CRC32CTest.Crc32cStdStringView"
+   ],
+   "test_results": {
+    "src/crc32c_unittest.cc::CRC32CTest.Crc32cCharPointer": "passed",
+    "src/crc32c_unittest.cc::CRC32CTest.Crc32cStdString": "passed",
+    "src/crc32c_unittest.cc::CRC32CTest.Crc32cStdStringView": "passed"
+   },
+   "tests_exercising_code": [
+    "src/crc32c_unittest.cc::CRC32CTest.Crc32cCharPointer",
+    "src/crc32c_unittest.cc::CRC32CTest.Crc32cStdString",
+    "src/crc32c_unittest.cc::CRC32CTest.Crc32cStdStringView"
+   ],
+   "coverage": {
+    "statements": 14,
+    "statements_covered": 11,
+    "branches": 0,
+    "branches_covered": 0,
+    "missing_lines": [
+     "include/crc32c/crc32c.h:67",
+     "include/crc32c/crc32c.h:68",
+     "include/crc32c/crc32c.h:69"
+    ],
+    "missing_branches": [],
+    "mcdc_measured": true,
+    "mcdc_conditions": 0,
+    "mcdc_covered": 0,
+    "missing_mcdc": []
+   },
+   "unexercised_code": [
+    "include/crc32c/crc32c.h::crc32c::Crc32c(const std::byte*, size_t)"
+   ],
+   "review": null,
+   "open_issues": 0
+  },
+  {
+   "requirement": {
+    "id": "CRC-006",
+    "title": "Hardware acceleration with identical results",
+    "text": "The library shall use the CPU's CRC32C instructions (SSE4.2 on x86-64, the CRC32 extension on ARM64) when the CPU supports them, and a portable implementation otherwise. Every implementation shall return the same results.",
+    "rationale": "Speed without changing results; the choice is made at run time.",
+    "acceptance": [
+     "portable, SSE4.2 and ARM64 implementations each give the CRC-001 and CRC-002 results",
+     "on a CPU without the instructions, the portable implementation is used"
+    ],
+    "parent": null,
+    "tags": [
+     "performance",
+     "portability"
+    ],
+    "source": "requirements/crc32c.yaml:63"
+   },
+   "status": "VERIFIED",
+   "implemented_by": [
+    "src/crc32c.cc::crc32c::Extend",
+    "src/crc32c_arm64.cc::crc32c::ExtendArm64",
+    "src/crc32c_arm64_check.h::crc32c::CanUseArm64Crc32",
+    "src/crc32c_portable.cc::crc32c::ExtendPortable",
+    "src/crc32c_sse42.cc::crc32c::ExtendSse42",
+    "src/crc32c_sse42_check.h::crc32c::CanUseSse42()@L25",
+    "src/crc32c_sse42_check.h::crc32c::CanUseSse42()@L39"
+   ],
+   "verified_by": [
+    "src/crc32c_extend_unittests.h::ExtendTest.BufferSlicing",
+    "src/crc32c_extend_unittests.h::ExtendTest.HelloWorld",
+    "src/crc32c_extend_unittests.h::ExtendTest.LargeBufferSlicing",
+    "src/crc32c_extend_unittests.h::ExtendTest.StandardResults"
+   ],
+   "test_results": {
+    "src/crc32c_extend_unittests.h::ExtendTest.BufferSlicing": "passed",
+    "src/crc32c_extend_unittests.h::ExtendTest.HelloWorld": "passed",
+    "src/crc32c_extend_unittests.h::ExtendTest.LargeBufferSlicing": "passed",
+    "src/crc32c_extend_unittests.h::ExtendTest.StandardResults": "passed"
+   },
+   "tests_exercising_code": [
+    "src/crc32c_extend_unittests.h::ExtendTest.BufferSlicing",
+    "src/crc32c_extend_unittests.h::ExtendTest.HelloWorld",
+    "src/crc32c_extend_unittests.h::ExtendTest.LargeBufferSlicing",
+    "src/crc32c_extend_unittests.h::ExtendTest.StandardResults"
+   ],
+   "coverage": {
+    "statements": 195,
+    "statements_covered": 162,
+    "branches": 40,
+    "branches_covered": 31,
+    "missing_lines": [
+     "src/crc32c.cc:28",
+     "src/crc32c_sse42.cc:183",
+     "src/crc32c_sse42.cc:184",
+     "src/crc32c_sse42.cc:185",
+     "src/crc32c_sse42.cc:187",
+     "src/crc32c_sse42.cc:188",
+     "src/crc32c_sse42.cc:189",
+     "src/crc32c_sse42.cc:192",
+     "src/crc32c_sse42.cc:193",
+     "src/crc32c_sse42.cc:194",
+     "src/crc32c_sse42.cc:195",
+     "src/crc32c_sse42.cc:196",
+     "src/crc32c_sse42.cc:197",
+     "src/crc32c_sse42.cc:198",
+     "src/crc32c_sse42.cc:199",
+     "src/crc32c_sse42.cc:200",
+     "src/crc32c_sse42.cc:203",
+     "src/crc32c_sse42.cc:204",
+     "src/crc32c_sse42.cc:205",
+     "src/crc32c_sse42.cc:206",
+     "src/crc32c_sse42.cc:207",
+     "src/crc32c_sse42.cc:208",
+     "src/crc32c_sse42.cc:210",
+     "src/crc32c_sse42.cc:211",
+     "src/crc32c_sse42.cc:212",
+     "src/crc32c_sse42.cc:213",
+     "src/crc32c_sse42.cc:214",
+     "src/crc32c_sse42.cc:215",
+     "src/crc32c_sse42.cc:216",
+     "src/crc32c_sse42.cc:217",
+     "src/crc32c_sse42.cc:218",
+     "src/crc32c_sse42.cc:219",
+     "src/crc32c_sse42.cc:220"
+    ],
+    "missing_branches": [
+     "src/crc32c.cc:22:7 false",
+     "src/crc32c_sse42.cc:182:10 true",
+     "src/crc32c_sse42.cc:185:21 true",
+     "src/crc32c_sse42.cc:185:21 false",
+     "src/crc32c_sse42.cc:209:10 true",
+     "src/crc32c_sse42.cc:212:21 true",
+     "src/crc32c_sse42.cc:212:21 false",
+     "src/crc32c_sse42_check.h:41:10 false",
+     "src/crc32c_sse42_check.h:41:52 false"
+    ],
+    "mcdc_measured": true,
+    "mcdc_conditions": 2,
+    "mcdc_covered": 0,
+    "missing_mcdc": [
+     "src/crc32c_sse42_check.h:41:10 condition 1/2",
+     "src/crc32c_sse42_check.h:41:10 condition 2/2"
+    ]
+   },
+   "unexercised_code": [
+    "src/crc32c_arm64.cc::crc32c::ExtendArm64 (no coverage data: not compiled or not measured in this run)",
+    "src/crc32c_arm64_check.h::crc32c::CanUseArm64Crc32 (no coverage data: not compiled or not measured in this run)",
+    "src/crc32c_sse42_check.h::crc32c::CanUseSse42()@L25 (no coverage data: not compiled or not measured in this run)"
+   ],
+   "review": null,
+   "open_issues": 0
+  },
+  {
+   "requirement": {
+    "id": "CRC-007",
+    "title": "Little-endian loads",
+    "text": "The 16-, 32- and 64-bit loads used by the implementations shall read memory as little-endian regardless of the host's byte order.",
+    "rationale": "",
+    "acceptance": [
+     "bytes 78 56 34 12 read as a 32-bit value -> 0x12345678",
+     "16-bit and 64-bit loads follow the same rule"
+    ],
+    "parent": "CRC-006",
+    "tags": [
+     "derived"
+    ],
+    "source": "requirements/crc32c.yaml:75"
+   },
+   "status": "VERIFIED",
+   "implemented_by": [
+    "src/crc32c_read_le.h::crc32c::ReadUint16LE",
+    "src/crc32c_read_le.h::crc32c::ReadUint32LE",
+    "src/crc32c_read_le.h::crc32c::ReadUint64LE"
+   ],
+   "verified_by": [
+    "src/crc32c_read_le_unittest.cc::Crc32CReadLETest.ReadUint16LE",
+    "src/crc32c_read_le_unittest.cc::Crc32CReadLETest.ReadUint32LE",
+    "src/crc32c_read_le_unittest.cc::Crc32CReadLETest.ReadUint64LE"
+   ],
+   "test_results": {
+    "src/crc32c_read_le_unittest.cc::Crc32CReadLETest.ReadUint16LE": "passed",
+    "src/crc32c_read_le_unittest.cc::Crc32CReadLETest.ReadUint32LE": "passed",
+    "src/crc32c_read_le_unittest.cc::Crc32CReadLETest.ReadUint64LE": "passed"
+   },
+   "tests_exercising_code": [
+    "src/crc32c_read_le_unittest.cc::Crc32CReadLETest.ReadUint16LE",
+    "src/crc32c_read_le_unittest.cc::Crc32CReadLETest.ReadUint32LE",
+    "src/crc32c_read_le_unittest.cc::Crc32CReadLETest.ReadUint64LE"
+   ],
+   "coverage": {
+    "statements": 18,
+    "statements_covered": 18,
+    "branches": 0,
+    "branches_covered": 0,
+    "missing_lines": [],
+    "missing_branches": [],
+    "mcdc_measured": true,
+    "mcdc_conditions": 0,
+    "mcdc_covered": 0,
+    "missing_mcdc": []
+   },
+   "unexercised_code": [],
+   "review": null,
+   "open_issues": 0
+  },
+  {
+   "requirement": {
+    "id": "CRC-008",
+    "title": "Alignment helper",
+    "text": "Rounding a pointer or integer up to an N-byte boundary (N a power of two) shall return the smallest multiple of N that is not less than the input.",
+    "rationale": "",
+    "acceptance": [
+     "RoundUp<4>(5) == 8, RoundUp<4>(8) == 8"
+    ],
+    "parent": "CRC-006",
+    "tags": [
+     "derived"
+    ],
+    "source": "requirements/crc32c.yaml:86"
+   },
+   "status": "VERIFIED",
+   "implemented_by": [
+    "src/crc32c_round_up.h::crc32c::RoundUp(uintptr_t)",
+    "src/crc32c_round_up.h::crc32c::RoundUp(const uint8_t*)"
+   ],
+   "verified_by": [
+    "src/crc32c_round_up_unittest.cc::CRC32CRoundUpTest.RoundUpPointer",
+    "src/crc32c_round_up_unittest.cc::CRC32CRoundUpTest.RoundUpUintptr"
+   ],
+   "test_results": {
+    "src/crc32c_round_up_unittest.cc::CRC32CRoundUpTest.RoundUpPointer": "passed",
+    "src/crc32c_round_up_unittest.cc::CRC32CRoundUpTest.RoundUpUintptr": "passed"
+   },
+   "tests_exercising_code": [
+    "src/crc32c_round_up_unittest.cc::CRC32CRoundUpTest.RoundUpPointer",
+    "src/crc32c_round_up_unittest.cc::CRC32CRoundUpTest.RoundUpUintptr"
+   ],
+   "coverage": {
+    "statements": 9,
+    "statements_covered": 9,
+    "branches": 0,
+    "branches_covered": 0,
+    "missing_lines": [],
+    "missing_branches": [],
+    "mcdc_measured": true,
+    "mcdc_conditions": 0,
+    "mcdc_covered": 0,
+    "missing_mcdc": []
+   },
+   "unexercised_code": [],
+   "review": null,
+   "open_issues": 0
+  }
+ ],
+ "unrequired_code": [],
+ "dangling_links": []
+}

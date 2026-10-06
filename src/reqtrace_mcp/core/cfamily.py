@@ -13,8 +13,9 @@ Conventions (comments, so no build-system or header changes are needed in the pr
 
 The comment applies to the next definition (above any `template<...>` line), or sits at the
 end of the definition's first line. GoogleTest `TEST`, `TEST_F`, `TEST_P`, `TYPED_TEST` and
-`TYPED_TEST_P` become test items named `Suite.Name`. In test files, `main` and functions named
-`test_*` (Unity/CMocka style) are tests too.
+`TYPED_TEST_P` become test items named `Suite.Name`. In test files, functions named `test*`
+(Unity/CMocka style) and any function carrying `// verifies:` (typically the `main` of a plain
+test executable) are tests too.
 
 tree-sitter parses without compiling, so it copes with code for other platforms and with
 macros it can't expand. It is a parser, not a compiler: heavily macro-generated functions

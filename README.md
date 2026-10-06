@@ -13,6 +13,8 @@ no certification claim. All examples are synthetic.
 
 **Status:** M0–M4 complete: library, server, plugin and a 60-run benchmark. The headline
 result is honest and mixed; see [Results](#results-10-tasks--2-arms--3-runs-claude-sonnet-55).
+**Languages:** Python (pytest) and C/C++ (GoogleTest or plain test executables, clang
+coverage with MC/DC), tested on a real library: [google/crc32c](#real-codebase-googlecrc32c).
 
 ---
 
@@ -33,8 +35,13 @@ requirements/*.yaml ──► # implements: REQ-001 ──► @pytest.mark.verif
 | `VERIFIED` | Linked tests pass and execute the implementing code |
 | `REVIEWED` | Verified, and a human approved this exact content (a sign-off goes stale if the code changes) |
 
-Gap analysis also finds **code no requirement asked for**, dangling links, uncovered
-branches, stale reviews and results that are stale since the last test run. Change impact
+Gap analysis also finds:
+
+- **code no requirement asked for**;
+- **implementing functions that no linked test calls** (for example one overload of four);
+- dangling links;
+- uncovered branches, and in C/C++ **MC/DC conditions** never shown to matter on their own;
+- stale reviews, and results that are stale since the last test run. Change impact
 maps a git diff to the affected requirements, the tests to rerun, and the reviews it
 invalidates. Requirement text edits and deleted functions are included.
 
@@ -47,15 +54,16 @@ invalidates. Requirement text edits and deleted functions are included.
 - **Separation of duties.** The `independent-verifier` sub-agent has no Edit, Write or Bash
   tools, and judges code against requirement text only.
 - **Deterministic server.** It never calls an LLM. Every output can be reproduced and audited.
-- **Safe by construction.** The only process the server starts is the repo's own
-  `coverage run -m pytest`, built from config. No tool accepts a command. Paths are confined to the repo.
+- **Safe by construction.** The server only starts the repo's own tests (`coverage run -m
+  pytest`, or the C/C++ build and test binaries named in `.reqtrace.yaml`), as argv lists
+  built from config with no shell. No tool accepts a command. Paths are confined to the repo.
 
 See [`docs/DECISIONS.md`](docs/DECISIONS.md) for the trade-offs behind each choice.
 
 ## Quickstart
 
-Needs Python 3.10+, [uv](https://docs.astral.sh/uv/), and `pytest` and `coverage` in the
-target repo's environment.
+Needs Python 3.10+ and [uv](https://docs.astral.sh/uv/). For Python repos: `pytest` and
+`coverage` in the target repo's environment. For C/C++ repos: clang and LLVM tools.
 
 **As a Claude Code plugin** (server, skill, sub-agents and commit gate):
 
@@ -80,7 +88,26 @@ reqtrace report            # .reqtrace/evidence/evidence.md
 reqtrace gate --verify     # exit 1 if gaps exceed .reqtrace.yaml thresholds
 ```
 
-The example repo seeds one of each problem. Without changing anything you get one VERIFIED,
+**For C or C++**, set `language: cpp` in `.reqtrace.yaml` and give the build commands and test
+binaries. reqtrace builds with clang coverage flags itself, in its own build directory:
+
+```yaml
+language: cpp
+source_dirs: [src, include]
+build:
+  commands:
+    - [cmake, -S, ., -B, "{build_dir}", -G, Ninja, -DBUILD_TESTING=ON]
+    - [cmake, --build, "{build_dir}"]
+tests:
+  - {binary: "{build_dir}/my_tests", kind: gtest}                        # one process per test
+  - {binary: "{build_dir}/c_api_test", kind: exe, source: tests/c_api_test.c}  # exit code
+```
+
+Annotate with comments: `// implements: REQ-001` above a function, and `// verifies: REQ-001`
+above a `TEST(...)` or a test `main`. This needs clang and LLVM tools (`llvm-profdata`,
+`llvm-cov`); MC/DC needs clang 18 or later.
+
+The Python example repo seeds one of each problem. Without changing anything you get one VERIFIED,
 one WEAKLY_VERIFIED (a tagged test that only checks a constant), one untested and one
 unimplemented requirement, plus one unrequired function.
 
@@ -150,10 +177,47 @@ never chosen unprompted.
 
 Method, caveats, failure analysis and next steps: **[RESULTS.md](RESULTS.md)**.
 
+## Real codebase: google/crc32c
+
+The C/C++ support was tested on [google/crc32c](https://github.com/google/crc32c), a CRC-32C
+library with portable, SSE4.2 and ARM64 implementations, GoogleTest typed tests and a C test
+program. I wrote 8 requirements from RFC 3720 and the public API, and added 34 comment lines
+of annotations to upstream files. Build files were unchanged.
+
+**On the upstream tests** (22 passing), reqtrace found:
+
+- no test of empty input;
+- one of four convenience overloads never called;
+- the two widest SSE4.2 loops never executed: they need 4,080+ bytes, and the largest test
+  buffer is 2,048;
+- the portable fallback and the CPU-feature probe unreachable on an SSE4.2 machine (MC/DC 0%);
+- ARM64 code not compiled on x86-64.
+
+**Claude Code with the plugin** (one run, no general shell) then:
+
+- added six tests;
+- left the hardware-dependent gaps open, with the right reasons;
+- found an untested acceptance criterion that reqtrace can't see.
+
+**A one-bit error** in either SSE4.2 lookup table passes all 22 upstream tests and fails the
+agent's new test. That is a test gap, not a bug: the tables are correct.
+
+Full write-up, reproduction script and raw output:
+**[examples/crc32c-case-study](examples/crc32c-case-study/README.md)**.
+
 ## Limitations, honestly
 
-- Python and pytest only. Links are at function level. Statement and branch coverage only;
-  MC/DC is future work.
+- Python (pytest) and C/C++ (GoogleTest or plain executables) only. Links are at function
+  level, not per acceptance criterion: an untested criterion inside a tested requirement is
+  invisible to the tool.
+- C/C++:
+  - clang only (no GCC/gcov, no MSVC);
+  - coverage only covers code compiled on the host;
+  - each test runs in its own process, which is slow for very large suites;
+  - per-test coverage includes start-up code;
+  - plain test executables report one result for everything in them;
+  - the scanner doesn't run the preprocessor, so macro-generated functions can be missed;
+  - clang 18 measures MC/DC only for decisions of up to 6 conditions.
 - Annotations are claims. reqtrace checks them with per-test coverage, but *execution is not
   assertion*: a test can run code and check nothing. The benchmark measures that with mutants.
   Mutation testing inside the tool is future work.
@@ -169,9 +233,11 @@ Method, caveats, failure analysis and next steps: **[RESULTS.md](RESULTS.md)**.
 ## Repo layout
 
 ```
-src/reqtrace_mcp/   core library (no MCP dependency), CLI, MCP server, pytest plugin
+src/reqtrace_mcp/   core library (no MCP dependency), CLI, MCP server, pytest plugin,
+                    C/C++ scanner (tree-sitter) and runner (clang coverage)
 skills/ agents/ hooks/ .claude-plugin/   Claude Code plugin
 examples/altitude-alerter/   demo repo with one of each gap
+examples/crc32c-case-study/  C++ case study on google/crc32c (setup script, results, agent run)
 evals/              benchmark: domains, tasks, harness, graders, results
 docs/               SPEC, DECISIONS (ADRs), DEVLOG
 ```

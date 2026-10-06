@@ -1,0 +1,326 @@
+diff --git a/include/crc32c/crc32c.h b/include/crc32c/crc32c.h
+index 6e1e8bd..b668223 100644
+--- a/include/crc32c/crc32c.h
++++ b/include/crc32c/crc32c.h
+@@ -50,23 +50,27 @@ namespace crc32c {
+ uint32_t Extend(uint32_t crc, const uint8_t* data, size_t count);
+ 
+ // Computes the CRC32C of "count" bytes in the buffer pointed by "data".
++// implements: CRC-001
+ inline uint32_t Crc32c(const uint8_t* data, size_t count) {
+   return Extend(0, data, count);
+ }
+ 
+ // Computes the CRC32C of "count" bytes in the buffer pointed by "data".
++// implements: CRC-005
+ inline uint32_t Crc32c(const char* data, size_t count) {
+   return Extend(0, reinterpret_cast<const uint8_t*>(data), count);
+ }
+ 
+ #if defined(__cpp_lib_byte)
+ // Computes the CRC32C of "count" bytes in the buffer pointed by "data".
++// implements: CRC-005
+ inline uint32_t Crc32c(const std::byte* data, size_t count) {
+   return Extend(0, reinterpret_cast<const uint8_t*>(data), count);
+ }
+ #endif // defined(__cpp_lib_byte)
+ 
+ // Computes the CRC32C of the string's content.
++// implements: CRC-005
+ inline uint32_t Crc32c(const std::string& string) {
+   return Crc32c(reinterpret_cast<const uint8_t*>(string.data()),
+                 string.size());
+@@ -81,6 +85,7 @@ inline uint32_t Crc32c(const std::string& string) {
+ namespace crc32c {
+ 
+ // Computes the CRC32C of the bytes in the string_view.
++// implements: CRC-005
+ inline uint32_t Crc32c(const std::string_view& string_view) {
+   return Crc32c(reinterpret_cast<const uint8_t*>(string_view.data()),
+                 string_view.size());
+diff --git a/src/crc32c.cc b/src/crc32c.cc
+index 804133b..78a8e35 100644
+--- a/src/crc32c.cc
++++ b/src/crc32c.cc
+@@ -15,6 +15,7 @@
+ 
+ namespace crc32c {
+ 
++// implements: CRC-001, CRC-002, CRC-003, CRC-006
+ uint32_t Extend(uint32_t crc, const uint8_t* data, size_t count) {
+ #if HAVE_SSE42 && (defined(_M_X64) || defined(__x86_64__))
+   static bool can_use_sse42 = CanUseSse42();
+@@ -27,11 +28,13 @@ uint32_t Extend(uint32_t crc, const uint8_t* data, size_t count) {
+   return ExtendPortable(crc, data, count);
+ }
+ 
++// implements: CRC-004
+ extern "C" uint32_t crc32c_extend(uint32_t crc, const uint8_t* data,
+                                   size_t count) {
+   return crc32c::Extend(crc, data, count);
+ }
+ 
++// implements: CRC-004
+ extern "C" uint32_t crc32c_value(const uint8_t* data, size_t count) {
+   return crc32c::Crc32c(data, count);
+ }
+diff --git a/src/crc32c_arm64.cc b/src/crc32c_arm64.cc
+index 701326d..a041cf8 100644
+--- a/src/crc32c_arm64.cc
++++ b/src/crc32c_arm64.cc
+@@ -60,6 +60,7 @@
+ 
+ namespace crc32c {
+ 
++// implements: CRC-006
+ uint32_t ExtendArm64(uint32_t crc, const uint8_t *data, size_t size) {
+   int64_t length = size;
+   uint32_t crc0, crc1, crc2, crc3;
+diff --git a/src/crc32c_arm64_check.h b/src/crc32c_arm64_check.h
+index c5a5e46..7aa3b9a 100644
+--- a/src/crc32c_arm64_check.h
++++ b/src/crc32c_arm64_check.h
+@@ -33,6 +33,7 @@ extern "C" unsigned long getauxval(unsigned long type) __attribute__((weak));
+ 
+ namespace crc32c {
+ 
++// implements: CRC-006
+ inline bool CanUseArm64Crc32() {
+ #if defined (__linux__) && (HAVE_STRONG_GETAUXVAL || HAVE_WEAK_GETAUXVAL)
+   // From 'arch/arm64/include/uapi/asm/hwcap.h' in Linux kernel source code.
+diff --git a/src/crc32c_capi_unittest.c b/src/crc32c_capi_unittest.c
+index c8993a0..01ef91d 100644
+--- a/src/crc32c_capi_unittest.c
++++ b/src/crc32c_capi_unittest.c
+@@ -10,6 +10,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++/* verifies: CRC-004 */
+ int main() {
+   /* From rfc3720 section B.4. */
+   uint8_t buf[32];
+diff --git a/src/crc32c_extend_unittests.h b/src/crc32c_extend_unittests.h
+index 0732973..ab0855d 100644
+--- a/src/crc32c_extend_unittests.h
++++ b/src/crc32c_extend_unittests.h
+@@ -20,6 +20,7 @@ class ExtendTest : public testing::Test {};
+ 
+ TYPED_TEST_SUITE_P(ExtendTest);
+ 
++// verifies: CRC-001, CRC-006
+ TYPED_TEST_P(ExtendTest, StandardResults) {
+   // From rfc3720 section B.4.
+   uint8_t buf[32];
+@@ -52,6 +53,7 @@ TYPED_TEST_P(ExtendTest, StandardResults) {
+             TypeParam::Extend(0, data, sizeof(data)));
+ }
+ 
++// verifies: CRC-002, CRC-006
+ TYPED_TEST_P(ExtendTest, HelloWorld) {
+   const uint8_t* hello_space_world =
+       reinterpret_cast<const uint8_t*>("hello world");
+@@ -62,6 +64,7 @@ TYPED_TEST_P(ExtendTest, HelloWorld) {
+             TypeParam::Extend(TypeParam::Extend(0, hello_space, 6), world, 5));
+ }
+ 
++// verifies: CRC-002, CRC-006
+ TYPED_TEST_P(ExtendTest, BufferSlicing) {
+   uint8_t buffer[48] = {
+       0x01, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+@@ -83,6 +86,7 @@ TYPED_TEST_P(ExtendTest, BufferSlicing) {
+   }
+ }
+ 
++// verifies: CRC-002, CRC-006
+ TYPED_TEST_P(ExtendTest, LargeBufferSlicing) {
+   uint8_t buffer[2048];
+   for (size_t i = 0; i < 2048; i++)
+diff --git a/src/crc32c_portable.cc b/src/crc32c_portable.cc
+index 31ec6ea..69a51f1 100644
+--- a/src/crc32c_portable.cc
++++ b/src/crc32c_portable.cc
+@@ -244,6 +244,7 @@ constexpr const ptrdiff_t kPrefetchHorizon = 256;
+ 
+ namespace crc32c {
+ 
++// implements: CRC-006
+ uint32_t ExtendPortable(uint32_t crc, const uint8_t* data, size_t size) {
+   const uint8_t* p = data;
+   const uint8_t* e = p + size;
+diff --git a/src/crc32c_prefetch.h b/src/crc32c_prefetch.h
+index e8df540..fb56ffb 100644
+--- a/src/crc32c_prefetch.h
++++ b/src/crc32c_prefetch.h
+@@ -23,6 +23,7 @@
+ namespace crc32c {
+ 
+ // Ask the hardware to prefetch the data at the given address into the L1 cache.
++// derived: performance hint only; cannot change any result
+ inline void RequestPrefetch(const uint8_t* address) {
+ #if HAVE_BUILTIN_PREFETCH
+   // Clang and GCC implement the __builtin_prefetch non-standard extension,
+diff --git a/src/crc32c_read_le.h b/src/crc32c_read_le.h
+index bb2231e..5acffa9 100644
+--- a/src/crc32c_read_le.h
++++ b/src/crc32c_read_le.h
+@@ -13,6 +13,7 @@
+ namespace crc32c {
+ 
+ // Reads a little-endian 16-bit integer from bytes, not necessarily aligned.
++// implements: CRC-007
+ inline uint16_t ReadUint16LE(const uint8_t* buffer) {
+ #if BYTE_ORDER_BIG_ENDIAN
+   return ((uint16_t{buffer[0]}) | (uint16_t{buffer[1]} << 8));
+@@ -25,6 +26,7 @@ inline uint16_t ReadUint16LE(const uint8_t* buffer) {
+ }
+ 
+ // Reads a little-endian 32-bit integer from bytes, not necessarily aligned.
++// implements: CRC-007
+ inline uint32_t ReadUint32LE(const uint8_t* buffer) {
+ #if BYTE_ORDER_BIG_ENDIAN
+   return ((uint32_t{buffer[0]}) | (uint32_t{buffer[1]} << 8) |
+@@ -38,6 +40,7 @@ inline uint32_t ReadUint32LE(const uint8_t* buffer) {
+ }
+ 
+ // Reads a little-endian 64-bit integer from bytes, not necessarily aligned.
++// implements: CRC-007
+ inline uint64_t ReadUint64LE(const uint8_t* buffer) {
+ #if BYTE_ORDER_BIG_ENDIAN
+   return ((uint64_t{buffer[0]}) | (uint64_t{buffer[1]} << 8) |
+diff --git a/src/crc32c_read_le_unittest.cc b/src/crc32c_read_le_unittest.cc
+index 8fbfc41..d3f1d65 100644
+--- a/src/crc32c_read_le_unittest.cc
++++ b/src/crc32c_read_le_unittest.cc
+@@ -13,6 +13,7 @@
+ 
+ namespace crc32c {
+ 
++// verifies: CRC-007
+ TEST(Crc32CReadLETest, ReadUint16LE) {
+   // little-endian 0x1234
+   uint8_t bytes[] = {0x34, 0x12};
+@@ -20,6 +21,7 @@ TEST(Crc32CReadLETest, ReadUint16LE) {
+   EXPECT_EQ(uint16_t{0x1234}, ReadUint16LE(bytes));
+ }
+ 
++// verifies: CRC-007
+ TEST(Crc32CReadLETest, ReadUint32LE) {
+   // little-endian 0x12345678
+   uint8_t bytes[] = {0x78, 0x56, 0x34, 0x12};
+@@ -27,6 +29,7 @@ TEST(Crc32CReadLETest, ReadUint32LE) {
+   EXPECT_EQ(uint32_t{0x12345678}, ReadUint32LE(bytes));
+ }
+ 
++// verifies: CRC-007
+ TEST(Crc32CReadLETest, ReadUint64LE) {
+   // little-endian 0x123456789ABCDEF0
+   uint8_t bytes[] = {0xF0, 0xDE, 0xBC, 0x9A, 0x78, 0x56, 0x34, 0x12};
+diff --git a/src/crc32c_round_up.h b/src/crc32c_round_up.h
+index d3b922b..5fabd89 100644
+--- a/src/crc32c_round_up.h
++++ b/src/crc32c_round_up.h
+@@ -13,6 +13,7 @@ namespace crc32c {
+ // Returns the smallest number >= the given number that is evenly divided by N.
+ //
+ // N must be a power of two.
++// implements: CRC-008
+ template <int N>
+ constexpr inline uintptr_t RoundUp(uintptr_t pointer) {
+   static_assert((N & (N - 1)) == 0, "N must be a power of two");
+@@ -22,6 +23,7 @@ constexpr inline uintptr_t RoundUp(uintptr_t pointer) {
+ // Returns the smallest address >= the given address that is aligned to N bytes.
+ //
+ // N must be a power of two.
++// implements: CRC-008
+ template <int N>
+ constexpr inline const uint8_t* RoundUp(const uint8_t* pointer) {
+   static_assert((N & (N - 1)) == 0, "N must be a power of two");
+diff --git a/src/crc32c_round_up_unittest.cc b/src/crc32c_round_up_unittest.cc
+index 5ff657b..cd11377 100644
+--- a/src/crc32c_round_up_unittest.cc
++++ b/src/crc32c_round_up_unittest.cc
+@@ -11,6 +11,7 @@
+ 
+ namespace crc32c {
+ 
++// verifies: CRC-008
+ TEST(CRC32CRoundUpTest, RoundUpUintptr) {
+   uintptr_t zero = 0;
+ 
+@@ -55,6 +56,7 @@ TEST(CRC32CRoundUpTest, RoundUpUintptr) {
+   ASSERT_EQ(~static_cast<uintptr_t>(7), RoundUp<4>(~static_cast<uintptr_t>(9)));
+ }
+ 
++// verifies: CRC-008
+ TEST(CRC32CRoundUpTest, RoundUpPointer) {
+   uintptr_t zero = 0, three = 3, four = 4, seven = 7, eight = 8;
+ 
+diff --git a/src/crc32c_sse42.cc b/src/crc32c_sse42.cc
+index 524b237..8279ef4 100644
+--- a/src/crc32c_sse42.cc
++++ b/src/crc32c_sse42.cc
+@@ -119,6 +119,7 @@ constexpr const ptrdiff_t kPrefetchHorizon = 256;
+ 
+ }  // namespace
+ 
++// implements: CRC-006
+ uint32_t ExtendSse42(uint32_t crc, const uint8_t* data, size_t size) {
+   const uint8_t* p = data;
+   const uint8_t* e = data + size;
+diff --git a/src/crc32c_sse42_check.h b/src/crc32c_sse42_check.h
+index ad380dd..a1ec1fd 100644
+--- a/src/crc32c_sse42_check.h
++++ b/src/crc32c_sse42_check.h
+@@ -21,6 +21,7 @@
+ 
+ namespace crc32c {
+ 
++// implements: CRC-006
+ inline bool CanUseSse42() {
+   int cpu_info[4];
+   __cpuid(cpu_info, 1);
+@@ -34,6 +35,7 @@ inline bool CanUseSse42() {
+ 
+ namespace crc32c {
+ 
++// implements: CRC-006
+ inline bool CanUseSse42() {
+   unsigned int eax, ebx, ecx, edx;
+   return __get_cpuid(1, &eax, &ebx, &ecx, &edx) && ((ecx & (1 << 20)) != 0);
+diff --git a/src/crc32c_unittest.cc b/src/crc32c_unittest.cc
+index d6c6af6..1535bf6 100644
+--- a/src/crc32c_unittest.cc
++++ b/src/crc32c_unittest.cc
+@@ -12,6 +12,7 @@
+ 
+ #include "./crc32c_extend_unittests.h"
+ 
++// verifies: CRC-001
+ TEST(Crc32CTest, Crc32c) {
+   // From rfc3720 section B.4.
+   uint8_t buf[32];
+@@ -56,6 +57,7 @@ INSTANTIATE_TYPED_TEST_SUITE_P(Api, ExtendTest, ApiTestTraits);
+ 
+ }  // namespace crc32c
+ 
++// verifies: CRC-005
+ TEST(CRC32CTest, Crc32cCharPointer) {
+   char buf[32];
+ 
+@@ -78,6 +80,7 @@ TEST(CRC32CTest, Crc32cCharPointer) {
+             crc32c::Crc32c(buf, sizeof(buf)));
+ }
+ 
++// verifies: CRC-005
+ TEST(CRC32CTest, Crc32cStdString) {
+   std::string buf;
+   buf.resize(32);
+@@ -102,6 +105,7 @@ TEST(CRC32CTest, Crc32cStdString) {
+ #if __cplusplus > 201402L
+ #if __has_include(<string_view>)
+ 
++// verifies: CRC-005
+ TEST(CRC32CTest, Crc32cStdStringView) {
+   uint8_t buf[32];
+   std::string_view view(reinterpret_cast<const char*>(buf), sizeof(buf));

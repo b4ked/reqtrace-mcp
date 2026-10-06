@@ -1,0 +1,65 @@
+[
+ {
+  "kind": "uncovered_branch",
+  "req_id": "CRC-001",
+  "location": "src/crc32c.cc:22:7 false",
+  "detail": "1 branch(es) in implementing code never taken by any test",
+  "next_action": "Add a test for the untaken branch, or remove dead code."
+ },
+ {
+  "kind": "uncovered_branch",
+  "req_id": "CRC-002",
+  "location": "src/crc32c.cc:22:7 false",
+  "detail": "1 branch(es) in implementing code never taken by any test",
+  "next_action": "Add a test for the untaken branch, or remove dead code."
+ },
+ {
+  "kind": "untested",
+  "req_id": "CRC-003",
+  "location": "requirements/crc32c.yaml:34",
+  "detail": "CRC-003: NOT_VERIFIED",
+  "next_action": "Write tests with `// verifies: CRC-003` above each TEST(...) (or above `main` of a test executable) that check each acceptance criterion, including boundaries."
+ },
+ {
+  "kind": "unexercised_code",
+  "req_id": "CRC-005",
+  "location": "include/crc32c/crc32c.h::crc32c::Crc32c(const std::byte*, size_t)",
+  "detail": "No passing test linked to CRC-005 executes include/crc32c/crc32c.h::crc32c::Crc32c(const std::byte*, size_t)",
+  "next_action": "Add a test linked to CRC-005 that calls it, or fix the `implements` link. Code not built on this platform needs verifying on one where it is."
+ },
+ {
+  "kind": "uncovered_branch",
+  "req_id": "CRC-006",
+  "location": "src/crc32c.cc:22:7 false, src/crc32c_sse42.cc:182:10 true, src/crc32c_sse42.cc:185:21 true, src/crc32c_sse42.cc:185:21 false, src/crc32c_sse42.cc:209:10 true",
+  "detail": "9 branch(es) in implementing code never taken by any test",
+  "next_action": "Add a test for the untaken branch, or remove dead code."
+ },
+ {
+  "kind": "unexercised_code",
+  "req_id": "CRC-006",
+  "location": "src/crc32c_arm64.cc::crc32c::ExtendArm64 (no coverage data: not compiled or not measured in this run), src/crc32c_arm64_check.h::crc32c::CanUseArm64Crc32 (no coverage data: not compiled or not measured in this run), src/crc32c_sse42_check.h::crc32c::CanUseSse42()@L25 (no coverage data: not compiled or not measured in this run)",
+  "detail": "No passing test linked to CRC-006 executes src/crc32c_arm64.cc::crc32c::ExtendArm64 (no coverage data: not compiled or not measured in this run); src/crc32c_arm64_check.h::crc32c::CanUseArm64Crc32 (no coverage data: not compiled or not measured in this run); src/crc32c_sse42_check.h::crc32c::CanUseSse42()@L25 (no coverage data: not compiled or not measured in this run)",
+  "next_action": "Add a test linked to CRC-006 that calls it, or fix the `implements` link. Code not built on this platform needs verifying on one where it is."
+ },
+ {
+  "kind": "uncovered_condition",
+  "req_id": "CRC-006",
+  "location": "src/crc32c_sse42_check.h:41:10 condition 1/2, src/crc32c_sse42_check.h:41:10 condition 2/2",
+  "detail": "2 condition(s) in implementing code never shown to independently affect their decision (MC/DC)",
+  "next_action": "Add test cases where only that condition changes and the outcome changes with it, or simplify the decision."
+ },
+ {
+  "kind": "requirement_quality",
+  "req_id": "CRC-003",
+  "location": "requirements/crc32c.yaml:34",
+  "detail": "[warning] More than one 'shall': consider splitting so each requirement is verified separately",
+  "next_action": "Clarify the requirement, or flag it for a human."
+ },
+ {
+  "kind": "requirement_quality",
+  "req_id": "CRC-006",
+  "location": "requirements/crc32c.yaml:63",
+  "detail": "[warning] More than one 'shall': consider splitting so each requirement is verified separately",
+  "next_action": "Clarify the requirement, or flag it for a human."
+ }
+]

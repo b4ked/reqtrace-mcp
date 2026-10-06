@@ -99,3 +99,57 @@ tests, each mutant is caught by the hidden tests of its own requirement, and the
 does not already pass. Grader unit tests score known-good and known-bad workspaces.
 **Why it mattered.** It caught a stale-bytecode bug (two same-size mutants written in the same
 second reused one `.pyc`) and a wrong expectation in a hidden test, before any agent ran.
+
+## ADR-015 C and C++: tree-sitter to find code, clang source-based coverage to measure it
+
+**Context.** The user asked for C/C++ support. Python's design leans on `ast` and on coverage.py's
+per-test contexts; C/C++ has neither for free.
+**Decision.**
+- *Scanning:* tree-sitter (C and C++ grammars, MIT) parses without compiling, so it copes with
+  code for other platforms and with unexpanded macros. Annotations are comments
+  (`// implements:`, `// verifies:`, `// derived:`), so no header or build change is needed.
+  GoogleTest `TEST*` macros parse as function definitions and become `Suite.Name` tests;
+  overloads are told apart by parameter types; duplicate definitions in `#if` branches get an
+  `@L<line>` suffix.
+- *Coverage:* clang source-based coverage (`-fprofile-instr-generate -fcoverage-mapping`, plus
+  `-fcoverage-mcdc` on clang 18 or later), read with `llvm-profdata` and `llvm-cov export`. It
+  gives lines, branch outcomes and MC/DC from one build.
+- *Per-test data:* each GoogleTest test runs in its own process with its own
+  `LLVM_PROFILE_FILE`. A plain test executable is one test, and all test items in its source
+  file share its result.
+- *Build:* the repo's own build commands, from `.reqtrace.yaml`, as argv lists. reqtrace adds
+  the coverage flags through `CC`, `CXX`, `CFLAGS`, `CXXFLAGS` and `LDFLAGS` (or `{coverage_flags}`
+  placeholders) in a dedicated build directory.
+- *One shape:* the runner writes `coverage_norm.json`, the same structure `CoverageIndex` now
+  uses for Python, so status, gap and report logic is shared.
+
+**Alternatives rejected.**
+- *gcov/gcovr:* works with GCC, but MC/DC only arrived in GCC 14, and per-test data means
+  resetting `.gcda` files between tests.
+- *libclang:* needs a compilation database and a matching libclang; tree-sitter is a pip wheel.
+- *ctags:* no reliable function extents.
+
+**Trade-offs.**
+- Clang only.
+- One process per test is slower for large suites.
+- Per-test coverage includes start-up code (static initialisers).
+- A parser without a preprocessor can miss macro-generated functions; files it can only
+  partly parse are reported.
+- clang 18 measures MC/DC only for decisions of up to 6 conditions; larger ones are skipped,
+  with a compiler warning in `build.log`.
+- Coverage covers only code compiled for the host, so ARM-only paths need an ARM run.
+
+**Security.** ADR-011 still holds: build and test commands come from the repo's config, never
+from a tool argument, with no shell.
+
+## ADR-016 Report implementing code no linked test executes
+
+**Context.** On crc32c, CRC-005 (four overloads) was `VERIFIED` while one overload was never
+called. The status rule asks only that *some* linked test executes *some* implementing code.
+**Decision.** Keep the status rule; add an `unexercised_code` gap listing each implementing
+item that no passing linked test executes. Items with no coverage data at all are labelled
+"not compiled or not measured in this run" (for example ARM64 code on x86-64).
+**Why not lower the status?** Status should mean the same thing in every repo. Making one
+unexecuted item downgrade the requirement would make platform-specific code permanently
+`WEAKLY_VERIFIED` on other hosts. The gap is reported, and not counted as blocking.
+**Applies to Python too.**

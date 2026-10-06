@@ -1,0 +1,133 @@
+diff --git a/src/crc32c_extend_unittests.h b/src/crc32c_extend_unittests.h
+index ab0855d..7f78146 100644
+--- a/src/crc32c_extend_unittests.h
++++ b/src/crc32c_extend_unittests.h
+@@ -8,6 +8,7 @@
+ #include <cstddef>
+ #include <cstdint>
+ #include <cstring>
++#include <vector>
+ 
+ #include "gtest/gtest.h"
+ 
+@@ -105,11 +106,63 @@ TYPED_TEST_P(ExtendTest, LargeBufferSlicing) {
+   }
+ }
+ 
++// verifies: CRC-001, CRC-006
++TYPED_TEST_P(ExtendTest, CheckValue) {
++  // The standard CRC-32/ISCSI check value.
++  const uint8_t* digits = reinterpret_cast<const uint8_t*>("123456789");
++  EXPECT_EQ(static_cast<uint32_t>(0xe3069283),
++            TypeParam::Extend(0, digits, 9));
++}
++
++// verifies: CRC-003, CRC-006
++TYPED_TEST_P(ExtendTest, EmptyInput) {
++  const uint8_t data[1] = {0x5a};
++
++  EXPECT_EQ(static_cast<uint32_t>(0), TypeParam::Extend(0, data, 0));
++  EXPECT_EQ(static_cast<uint32_t>(0x12345678),
++            TypeParam::Extend(0x12345678, data, 0));
++  EXPECT_EQ(static_cast<uint32_t>(0xffffffff),
++            TypeParam::Extend(0xffffffff, data, 0));
++  EXPECT_EQ(static_cast<uint32_t>(0), TypeParam::Extend(0, nullptr, 0));
++}
++
++// Large buffers at every alignment, checked against an independent bitwise
++// CRC-32C. Large enough to reach the widest block sizes of the accelerated
++// implementations.
++// verifies: CRC-001, CRC-002, CRC-006
++TYPED_TEST_P(ExtendTest, LargeBufferAgainstBitwiseReference) {
++  constexpr size_t kSize = 70000;
++  std::vector<uint8_t> buffer(kSize + 8);
++  for (size_t i = 0; i < buffer.size(); ++i)
++    buffer[i] = static_cast<uint8_t>(5 * i * i + 13 * i + 1);
++
++  for (size_t offset = 0; offset < 8; ++offset) {
++    const uint8_t* p = buffer.data() + offset;
++
++    uint32_t reference = 0xffffffff;
++    for (size_t i = 0; i < kSize; ++i) {
++      reference ^= p[i];
++      for (int bit = 0; bit < 8; ++bit)
++        reference = (reference >> 1) ^ (0x82f63b78 & (0 - (reference & 1)));
++    }
++    reference ^= 0xffffffff;
++
++    EXPECT_EQ(reference, TypeParam::Extend(0, p, kSize));
++
++    const size_t split = 20001;
++    EXPECT_EQ(reference, TypeParam::Extend(TypeParam::Extend(0, p, split),
++                                           p + split, kSize - split));
++  }
++}
++
+ REGISTER_TYPED_TEST_SUITE_P(ExtendTest,
+     StandardResults,
+     HelloWorld,
+     BufferSlicing,
+-    LargeBufferSlicing);
++    LargeBufferSlicing,
++    CheckValue,
++    EmptyInput,
++    LargeBufferAgainstBitwiseReference);
+ 
+ }  // namespace crc32c
+ 
+diff --git a/src/crc32c_unittest.cc b/src/crc32c_unittest.cc
+index 1535bf6..f21893c 100644
+--- a/src/crc32c_unittest.cc
++++ b/src/crc32c_unittest.cc
+@@ -102,6 +102,51 @@ TEST(CRC32CTest, Crc32cStdString) {
+   EXPECT_EQ(static_cast<uint32_t>(0x113fdb5c), crc32c::Crc32c(buf));
+ }
+ 
++#if defined(__cpp_lib_byte)
++
++// verifies: CRC-005
++TEST(CRC32CTest, Crc32cBytePointer) {
++  std::byte buf[32];
++
++  std::memset(buf, 0, sizeof(buf));
++  EXPECT_EQ(static_cast<uint32_t>(0x8a9136aa),
++            crc32c::Crc32c(buf, sizeof(buf)));
++
++  std::memset(buf, 0xff, sizeof(buf));
++  EXPECT_EQ(static_cast<uint32_t>(0x62a8ab43),
++            crc32c::Crc32c(buf, sizeof(buf)));
++
++  for (size_t i = 0; i < 32; ++i)
++    buf[i] = static_cast<std::byte>(i);
++  EXPECT_EQ(static_cast<uint32_t>(0x46dd794e),
++            crc32c::Crc32c(buf, sizeof(buf)));
++
++  for (size_t i = 0; i < 32; ++i)
++    buf[i] = static_cast<std::byte>(31 - i);
++  EXPECT_EQ(static_cast<uint32_t>(0x113fdb5c),
++            crc32c::Crc32c(buf, sizeof(buf)));
++}
++
++#endif  // defined(__cpp_lib_byte)
++
++// verifies: CRC-001, CRC-005
++TEST(CRC32CTest, Crc32cCheckValue) {
++  const std::string digits = "123456789";
++  EXPECT_EQ(static_cast<uint32_t>(0xe3069283), crc32c::Crc32c(digits));
++  EXPECT_EQ(static_cast<uint32_t>(0xe3069283),
++            crc32c::Crc32c(reinterpret_cast<const uint8_t*>(digits.data()),
++                           digits.size()));
++}
++
++// verifies: CRC-003
++TEST(CRC32CTest, EmptyInput) {
++  const uint8_t data[1] = {0x5a};
++  EXPECT_EQ(static_cast<uint32_t>(0), crc32c::Crc32c(data, 0));
++  EXPECT_EQ(static_cast<uint32_t>(0), crc32c::Crc32c(std::string()));
++  EXPECT_EQ(static_cast<uint32_t>(0x12345678),
++            crc32c::Extend(0x12345678, data, 0));
++}
++
+ #if __cplusplus > 201402L
+ #if __has_include(<string_view>)
+ 

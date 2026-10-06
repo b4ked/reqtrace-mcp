@@ -287,3 +287,8 @@ LLM-as-judge is only a fallback for matching free-text findings, and only after 
   be read as project config when developing this repo).
 - Eval runner: no `--bare` (runs on the user's Claude plan; see ADR-012). Workspaces outside the
   repo (ADR-013). Tasks validated by `python -m evals check` (ADR-014).
+- C and C++ (requested after M4; ADR-015, ADR-016):
+  - New config keys `language`, `test_file_patterns`, `build`, `tests`, `coverage.mcdc` and
+    `toolchain`.
+  - New gap kinds `uncovered_condition` (MC/DC) and `unexercised_code` (also used for Python).
+  - Case study on google/crc32c in `examples/crc32c-case-study/`.

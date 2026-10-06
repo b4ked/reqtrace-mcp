@@ -83,3 +83,41 @@ Things that would have gone wrong had I built from memory:
   is a good interview story about not trusting n=1.
 - The skill never fired on review prompts (0/9) and rarely on change prompts (1/6). The
   independent verifier was never chosen unprompted (0/30).
+
+## 2026-10-06 — C and C++ support, and a real codebase
+
+- **Spike first.** Clang 18 source-based coverage with `-fcoverage-mcdc` worked on a two-condition
+  toy. `llvm-cov export` JSON gives `branches` and `mcdc_records` per file. The container
+  lacked `libclang_rt.profile`; installing `libclang-rt-18-dev` fixed linking.
+- **Scanner problems found on real code** (all crc32c files now parse with 0 errors):
+  - `crc32c.h` uses the `#ifdef __cplusplus / extern "C" {` pattern, which an unpreprocessed
+    parse can't balance. Fix: re-parse with conditional lines blanked.
+  - `Crc32c` has 5 overloads, which needed ids from parameter types.
+  - `CanUseSse42` has two definitions with the same signature in `#if` branches, which needed
+    a line suffix.
+  - Reference parameters keep their name in a child node, not a field.
+  - A C test file using `TEST(...)` macros doesn't parse with the C grammar. Fix: also try the
+    C++ grammar and keep the parse with fewer errors.
+- **Typed tests.** gtest reports `Portable/ExtendTest/0.HelloWorld`; the source says
+  `TYPED_TEST_P(ExtendTest, HelloWorld)`. These map to `ExtendTest.HelloWorld[Portable/0]`,
+  so the Python parametrize logic (strip `[...]`, worst outcome wins) is reused unchanged.
+- **crc32c, upstream tests:** 22 pass. reqtrace found:
+  - no empty-input test;
+  - an overload never called;
+  - the two widest SSE4.2 loops never run (they need 4,080+ bytes; the largest test buffer is
+    2,048);
+  - the portable fallback and the CPU probe unreachable on an SSE4.2 machine;
+  - ARM64 code not compiled here.
+- **Tool change from the case study:** VERIFIED hid the uncalled overload. Added the
+  `unexercised_code` gap (ADR-016).
+- **One Claude Code run** (Sonnet 5.5, no general shell, plugin only), 87 s, $0.39 list.
+  - It added six tests and correctly left the hardware-dependent gaps open, with reasons.
+  - It found one gap reqtrace can't see: an untested acceptance criterion (the "123456789"
+    check value).
+  - I re-ran everything independently.
+- **Mutation check:** a one-bit change in either SSE4.2 skip table passes all 22 upstream
+  tests and fails the agent's large-buffer test. This shows a test gap, not a bug: the tables
+  are correct.
+- **Unity-style executables:** first version mapped only the annotated `main` of a plain
+  test executable. Now every test item in the executable's source shares its result. This is
+  honest at binary granularity; coverage per function is not available.

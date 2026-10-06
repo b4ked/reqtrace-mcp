@@ -1,0 +1,8 @@
+uncovered_branch       CRC-001   1 branch(es) in implementing code never taken by any test
+uncovered_branch       CRC-002   1 branch(es) in implementing code never taken by any test
+uncovered_branch       CRC-003   1 branch(es) in implementing code never taken by any test
+uncovered_branch       CRC-006   3 branch(es) in implementing code never taken by any test
+unexercised_code       CRC-006   No passing test linked to CRC-006 executes src/crc32c_arm64.cc::crc32c::ExtendArm64 (no coverage data: not compiled or not measured in this run); src/crc32c_arm64_check.h::crc32c::CanUseArm64Crc32 (no coverage data: not compiled or not measured in this run); src/crc32c_sse42_check.h::crc32c::CanUseSse42()@L25 (no coverage data: not compiled or not measured in this run)
+uncovered_condition    CRC-006   2 condition(s) in implementing code never shown to independently affect their decision (MC/DC)
+requirement_quality    CRC-003   [warning] More than one 'shall': consider splitting so each requirement is verified separately
+requirement_quality    CRC-006   [warning] More than one 'shall': consider splitting so each requirement is verified separately

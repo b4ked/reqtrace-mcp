@@ -1,0 +1,28 @@
+# reqtrace config for google/crc32c (copied into the clone by setup.sh).
+language: cpp
+source_dirs: [src, include]
+test_dirs: []                       # crc32c keeps its tests next to the code, in src/
+test_file_patterns: ["*_unittest.cc", "*_unittests.h", "*_unittest.c", "*_test_main.cc"]
+requirements: requirements
+
+build:
+  dir: .reqtrace/build              # a fresh build dir, so the coverage flags take effect
+  commands:
+    - [cmake, -S, ., -B, "{build_dir}", -G, Ninja,
+       -DCRC32C_BUILD_TESTS=ON, -DCRC32C_BUILD_BENCHMARKS=OFF, -DCRC32C_USE_GLOG=OFF]
+    - [cmake, --build, "{build_dir}"]
+
+tests:
+  - binary: "{build_dir}/crc32c_tests"          # GoogleTest: one process per test
+    kind: gtest
+  - binary: "{build_dir}/crc32c_capi_tests"     # plain C program: exit code is the result
+    kind: exe
+    source: src/crc32c_capi_unittest.c
+
+coverage:
+  mcdc: true                        # needs clang >= 18
+
+unrequired_code:
+  ignore: ["src/crc32c_benchmark.cc"]   # benchmarks are not built here
+
+timeout_s: 900

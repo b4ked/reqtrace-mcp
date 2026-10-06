@@ -6,6 +6,8 @@ build:
     - ["{cc}", "{coverage_flags}", -o, "{build_dir}/lim_tests",
        src/lim.c, tests/lim_unittest.c, tests/mini_gtest_main.c]
     - ["{cc}", "{coverage_flags}", -o, "{build_dir}/capi_check", src/lim.c, tests/capi_check.c]
+    - ["{cc}", "{coverage_flags}", -o, "{build_dir}/unity_style", src/lim.c, tests/unity_style.c]
 tests:
   - {binary: "{build_dir}/lim_tests", kind: gtest}
   - {binary: "{build_dir}/capi_check", kind: exe, source: tests/capi_check.c}
+  - {binary: "{build_dir}/unity_style", kind: exe, source: tests/unity_style.c}

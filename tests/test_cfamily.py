@@ -188,11 +188,13 @@ def test_c_runner_statuses_failures_and_exe_tests(crepo: Path) -> None:
         "tests/lim_unittest.c::LimTest.Percent": "failed",
         "tests/lim_unittest.c::WinTest.Bounds[Typed/0]": "passed",
         "tests/capi_check.c::main": "passed",
+        "tests/unity_style.c::test_clamp_low": "passed",  # share the executable's result
+        "tests/unity_style.c::test_clamp_high": "passed",
     }
     m = build_matrix(load_context(cfg))
     st = {t.requirement.id: t.status for t in m.requirements}
     assert st == {
-        "LIM-001": Status.VERIFIED,  # by a gtest-style test and a plain executable
+        "LIM-001": Status.VERIFIED,  # gtest-style test, plain executables, Unity-style tests
         "LIM-002": Status.VERIFIED,  # typed-test instance mapped back to its definition
         "LIM-003": Status.WEAKLY_VERIFIED,  # test never calls scale()
         "LIM-004": Status.FAILING,
@@ -250,6 +252,8 @@ def test_c_change_impact(crepo: Path) -> None:
         "tests/capi_check.c::main",
         "tests/lim_unittest.c::LimTest.Clamp",
         "tests/lim_unittest.c::LimTest.Percent",
+        "tests/unity_style.c::test_clamp_high",
+        "tests/unity_style.c::test_clamp_low",
     ]
 
 

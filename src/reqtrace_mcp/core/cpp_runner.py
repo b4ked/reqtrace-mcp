@@ -370,14 +370,13 @@ def run_cpp_tests(
                 )
                 per_test_raw.append((node, binary, raw))
         else:
+            # A plain executable is one result. Every test item in its source file (its
+            # annotated `main`, or Unity/CMocka-style test_* functions) shares that result.
             src_items = by_path.get(tb.source or "", [])
-            item = src_items[0] if len(src_items) == 1 else None
-            node = (
-                test_nodeid(item)
-                if item
-                else (f"{tb.source}::main" if tb.source else f"{Path(binary).name}::main")
-            )
-            if wanted and node not in wanted:
+            nodes = [(test_nodeid(i), list(i.verifies)) for i in src_items] or [
+                (f"{tb.source}::main" if tb.source else f"{Path(binary).name}::main", [])
+            ]
+            if wanted and not any(n in wanted for n, _ in nodes):
                 continue
             counter += 1
             raw = prof / f"t{counter}.profraw"
@@ -391,16 +390,17 @@ def run_cpp_tests(
                 else (f"E exit code {code}\n" + "\n".join(out.strip().splitlines()[-8:]))
             )
             log.append(f"[{outcome}] {Path(binary).name}")
-            outcomes.append(
-                TestOutcome(
-                    nodeid=node,
-                    outcome=outcome,  # type: ignore[arg-type]
-                    duration_s=round(dur, 3),
-                    verifies=list(item.verifies) if item else [],
-                    message=msg,
+            for node, verifies in nodes:
+                outcomes.append(
+                    TestOutcome(
+                        nodeid=node,
+                        outcome=outcome,  # type: ignore[arg-type]
+                        duration_s=round(dur, 3),
+                        verifies=verifies,
+                        message=msg,
+                    )
                 )
-            )
-            per_test_raw.append((node, binary, raw))
+                per_test_raw.append((node, binary, raw))
         if timed_out:
             break
 
@@ -430,19 +430,22 @@ def _write_coverage(
             f"{rdir / 'build.log'}"
         )
     tests: dict[str, dict[str, set[int]]] = {}
+    exported: dict[Path, dict[str, dict[int, int]]] = {}
     for node, binary, raw in present:
-        pd = raw.with_suffix(".profdata")
-        if not _merge(tc, [raw], pd):
-            continue
-        for relp, lines in _lcov_lines(_export(tc, pd, [binary], "lcov"), cfg).items():
+        if raw not in exported:  # an exe's tests share one profile
+            pd = raw.with_suffix(".profdata")
+            if not _merge(tc, [raw], pd):
+                continue
+            exported[raw] = _lcov_lines(_export(tc, pd, [binary], "lcov"), cfg)
+            pd.unlink()
+        for relp, lines in exported[raw].items():
             hit = {ln for ln, c in lines.items() if c > 0}
             if hit:
                 tests.setdefault(node, {}).setdefault(relp, set()).update(hit)
-        pd.unlink()
     files: dict[str, dict[str, Any]] = {}
     merged = rdir / "merged.profdata"
     used = sorted({b for (_n, b, _r) in present})
-    if used and _merge(tc, [r for (_n, _b, r) in present], merged):
+    if used and _merge(tc, sorted({r for (_n, _b, r) in present}), merged):
         merged_lines = _lcov_lines(_export(tc, merged, used, "lcov"), cfg)
         extra = _branches_and_mcdc(cfg, json.loads(_export(tc, merged, used, "text")))
         for relp, da in merged_lines.items():

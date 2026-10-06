@@ -1,0 +1,9 @@
+CRC-001    VERIFIED         impl=2 tests=5 exercising=5 stmt=89% branch=50% mcdc=n/a
+CRC-002    VERIFIED         impl=1 tests=4 exercising=4 stmt=83% branch=50% mcdc=n/a
+CRC-003    VERIFIED         impl=1 tests=2 exercising=2 stmt=83% branch=50% mcdc=n/a
+CRC-004    VERIFIED         impl=2 tests=1 exercising=1 stmt=100% branch=n/a mcdc=n/a
+CRC-005    VERIFIED         impl=4 tests=5 exercising=5 stmt=100% branch=n/a mcdc=n/a
+CRC-006    VERIFIED         impl=7 tests=7 exercising=7 stmt=99% branch=92% mcdc=0%
+CRC-007    VERIFIED         impl=3 tests=3 exercising=3 stmt=100% branch=n/a mcdc=n/a
+CRC-008    VERIFIED         impl=2 tests=2 exercising=2 stmt=100% branch=n/a mcdc=n/a
+unrequired code: 0
